@@ -1,12 +1,10 @@
 import MyImages from "@/components/MyImages";
 import { getBaglama, getBaglamalar } from "@/firebase.config";
-
 import { notFound } from "next/navigation";
 import React from "react";
 
 export async function generateStaticParams() {
   const baglamalar = await getBaglamalar();
-
   return baglamalar.map((baglama) => ({
     slug: baglama.id,
   }));

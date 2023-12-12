@@ -6,6 +6,7 @@ import "../assets/fontawesome-6.1.2/css/all.min.css";
 import Navbar from "@/components/Navbar";
 import { getServerSession } from "next-auth";
 import SessionProvider from "@/components/SessionProvider";
+import NewButton from "@/components/NewBaglama";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,7 +28,11 @@ export default async function RootLayout({
           <SessionProvider session={session}>
             <div className="min-h-screen bg-slate-400">
               <Navbar />
-              <main className="sm:px-16 px-4 mt-3">{children}</main>
+
+              <main className="sm:px-16 px-4 mt-3">
+                <NewButton />
+                {children}
+              </main>
             </div>
           </SessionProvider>
         </StyledComponentsRegistry>

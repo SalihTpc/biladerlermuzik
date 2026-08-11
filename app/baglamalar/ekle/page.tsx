@@ -1,11 +1,11 @@
+import AuthGuard from "@/components/AuthGuard";
 import BaglamaForm from "@/components/BaglamaForm";
-import React from "react";
 
 const page = () => {
   return (
-    <div>
+    <AuthGuard>
       <BaglamaForm />
-    </div>
+    </AuthGuard>
   );
 };
 

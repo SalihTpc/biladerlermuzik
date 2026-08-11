@@ -4,8 +4,7 @@ import "./globals.css";
 import StyledComponentsRegistry from "@/lib/AntdRegistry";
 import "../assets/fontawesome-6.1.2/css/all.min.css";
 import Navbar from "@/components/Navbar";
-import { getServerSession } from "next-auth";
-import SessionProvider from "@/components/SessionProvider";
+import { AuthProvider } from "@/context/AuthContext";
 import NewButton from "@/components/NewBaglama";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -15,17 +14,16 @@ export const metadata: Metadata = {
   description: "Biladerler Müzik Evi",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession();
   return (
     <html lang="en">
       <body className={inter.className}>
         <StyledComponentsRegistry>
-          <SessionProvider session={session}>
+          <AuthProvider>
             <div className="min-h-screen bg-slate-400">
               <Navbar />
 
@@ -34,7 +32,7 @@ export default async function RootLayout({
                 {children}
               </main>
             </div>
-          </SessionProvider>
+          </AuthProvider>
         </StyledComponentsRegistry>
       </body>
     </html>

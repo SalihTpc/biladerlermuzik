@@ -12,16 +12,9 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import {
-  getAuth,
-  updateProfile,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-} from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { modifyString } from "./lib/genFunc";
 import { Baglama } from "./lib/Interfaces";
-// import { Anime, Category } from "@/lib/Interface";
-// import { modifyString } from "@/lib/generalFunc";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_API_KEY!,
@@ -35,7 +28,7 @@ const firebaseConfig = {
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
-const auth = getAuth();
+const auth = getAuth(app);
 
 const addBaglama = async (baglama: {
   title: string;
@@ -66,37 +59,6 @@ const addCategory = async (title: string) => {
   const result = await setDoc(doc(db, "categories", modifyString(title)), data);
   return result;
 };
-
-const updateMyProfile = async (values: any) => {
-  try {
-    const user = auth.currentUser;
-    user
-      ? await updateProfile(auth.currentUser, values)
-      : console.log("user yok");
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-// onAuthStateChanged(auth, (user) => {
-//   if (user) {
-//     console.log(user);
-//     console.log(user.displayName);
-//     updateProfile(user, {
-//       displayName: "Biladerler Müzik",
-//       photoURL: "https://eksiup.com/images/22/59/ib660995rinz.png",
-//     })
-//       .then(() => {
-//         console.log("updated");
-//         // ...
-//       })
-//       .catch((error) => {
-//         console.log("error");
-//       });
-//   } else {
-//     console.log("user yok");
-//   }
-// });
 
 const getBaglamalar = async () => {
   const animeCollectionRef = collection(db, "baglama");
@@ -144,7 +106,6 @@ export {
   storage,
   auth,
   addBaglama,
-  updateMyProfile,
   firebaseConfig,
   getBaglamalar,
   getBaglama,

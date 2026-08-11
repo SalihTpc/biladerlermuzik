@@ -3,14 +3,15 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import logo from "../app/icon.png";
-import { signIn, signOut, useSession } from "next-auth/react";
 import "./Navbar.css";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { data: session } = useSession();
+  const { user, loading, logout } = useAuth();
   const pathname = usePathname();
+
   return (
     <nav className="z-10 sm:px-16 px-4">
       <Link
@@ -25,17 +26,23 @@ const Navbar = () => {
           className="mr-3 bg-white rounded-lg hover:scale-110 transition ease-in-out duration-300"
           title="Anasayfa"
         />
-        <div className="max-sm:hidden flex gap-2">
-          {session ? (
+        <div className="max-sm:hidden flex gap-2 items-center">
+          {loading ? null : user ? (
             <>
-              <p className="hover:text-slate-200">
-                {session?.user?.name || session.user?.email}{" "}
-              </p>
-              <br />
-              <button onClick={() => signOut()}>Sign out</button>
+              <Link href="/profile" className="hover:text-slate-200">
+                {user.displayName || user.email}
+              </Link>
+              <button type="button" onClick={() => logout()}>
+                Çıkış
+              </button>
             </>
           ) : (
-            <p className="hover:text-slate-200">Bilarderler Müzik</p>
+            <>
+              <p className="hover:text-slate-200 m-0">Biladerler Müzik</p>
+              <Link href="/login" className="hover:text-slate-200">
+                Giriş
+              </Link>
+            </>
           )}
         </div>
       </Link>

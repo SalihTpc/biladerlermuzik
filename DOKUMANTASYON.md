@@ -221,28 +221,32 @@ Liste kartları `modifyString(title)` ile gezer; detay ve `generateStaticParams`
 
 ## 6. Auth akışı
 
-### Kurulum
+### Kaynak: Firebase Auth + React Context
 
-- API: `pages/api/auth/[...nextauth].ts`
-- Özel giriş sayfası: `pages.signIn = "/login"`
-- Provider’lar:
-  1. **GitHub** — `GITHUB_ID`, `GITHUB_SECRET`
-  2. **Credentials** — Firebase `signInWithEmailAndPassword(auth, email, password)` → `{ id, name, email, image }`
+Tek kaynak doğruluk: tarayıcıdaki Firebase Auth. `onAuthStateChanged` ile oturum `AuthProvider` içinde tutulur.
 
-### Giriş adımları
+| Parça | Dosya |
+|-------|-------|
+| Provider / hook | `context/AuthContext.tsx` → `AuthProvider`, `useAuth` |
+| Rota koruması | `components/AuthGuard.tsx` |
+| Layout | `app/layout.tsx` → `AuthProvider` |
 
-1. Kullanıcı `/login` → `LoginForm`
-2. İstemci: `signIn("credentials", { email, password, redirect: true, callbackUrl: "/" })`
-3. NextAuth `authorize` → Firebase Auth
-4. Layout `getServerSession()` + `SessionProvider` ile oturum
+### API (`useAuth`)
 
-### Soft gating (middleware yok)
+- `user` — Firebase `User \| null`
+- `loading` — ilk `onAuthStateChanged` sonucu beklenirken `true`
+- `login(email, password)` — `signInWithEmailAndPassword`
+- `logout()` — `signOut`
+- `updateUserProfile({ displayName, photoURL })` — `updateProfile` + reload
 
-- `NewBaglama`: yalnızca authenticated görünür
-- `Navbar`: oturum varsa isim/e-posta + Sign out
-- `/profile`: unauthenticated mesajı (login redirect yorum satırında)
+### Akış
 
-`@auth/firebase-adapter` ve `@next-auth/firebase-adapter` `package.json`’da var; NextAuth config’e **bağlı değil**.
+1. `/login` → `LoginForm` → `login()` (istemci Firebase Auth)
+2. `onAuthStateChanged` → Context `user` güncellenir
+3. Navbar / FloatButton / AuthGuard `useAuth` ile tepki verir
+4. `logout()` oturumu kapatır; korumalı sayfalar `/login`’e yönlendirir
+
+Not: Eski NextAuth API (`pages/api/auth/[...nextauth].ts`) UI’dan koparıldı; oturum artık NextAuth session üzerinden gitmiyor.
 
 ---
 

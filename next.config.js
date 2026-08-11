@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: [
+    "firebase",
+    "@firebase/app",
+    "@firebase/auth",
+    "@firebase/firestore",
+    "@firebase/storage",
+  ],
   images: {
     remotePatterns: [
       {
@@ -13,6 +20,12 @@ const nextConfig = {
         hostname: "m.media-amazon.com",
         port: "",
         pathname: "/images/**",
+      },
+      {
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
+        port: "",
+        pathname: "/**",
       },
       {
         protocol: "https",

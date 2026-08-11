@@ -8,20 +8,22 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      colors: {
+        bg: "var(--color-bg)",
+        surface: "var(--color-surface)",
+        ink: "var(--color-text)",
+        muted: "var(--color-text-muted)",
+        accent: "var(--color-accent)",
+        nav: "var(--color-nav)",
+        "nav-hover": "var(--color-nav-hover)",
+        line: "var(--color-border)",
       },
       fontFamily: {
-        roboto: ["Roboto", "sans-serif"],
-        inter: ["Inter", "sans-serif"],
-        montserrat: ["Montserrat", "sans-serif"],
-        opensans: ["Open Sans", "sans-serif"],
-        jakarta: ["Plus Jakarta Sans", "sans-serif"],
+        display: ["var(--font-display-family)"],
+        body: ["var(--font-body-family)"],
       },
-      backgroundColor: {
-        theme: "#001529",
+      borderRadius: {
+        theme: "var(--radius)",
       },
     },
   },

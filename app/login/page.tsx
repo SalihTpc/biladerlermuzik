@@ -1,13 +1,17 @@
 import LoginForm from "@/components/LoginForm";
-import React from "react";
+import PageShell from "@/components/PageShell";
 
 const page = () => {
   return (
-    <div className="flex items-center justify-center ">
-      <div className="px-6 mt-10 py-6 bg-slate-500 rounded-md flex items-center justify-center flex-col gap-3">
+    <PageShell>
+      <header className="page-header" style={{ textAlign: "center" }}>
+        <h1 className="font-display">Giriş</h1>
+        <p>Hesabınıza giriş yapın</p>
+      </header>
+      <div className="auth-panel">
         <LoginForm />
       </div>
-    </div>
+    </PageShell>
   );
 };
 

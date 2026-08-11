@@ -1,15 +1,19 @@
-import React from "react";
+import PageShell from "@/components/PageShell";
+import { getTenant } from "@/lib/tenants";
 
 const page = () => {
+  const tenant = getTenant();
+
   return (
-    <div>
-      2018 Yılından bu yana Ankara Keçiörende'te bağlama ve araç gereçleri
-      satışı ile tüm bağlama dostlarına hizmet vermekteyiz.Satışlarımızı
-      mağazamızdan fiziki olarak yapmaktayız.Ayrıca YouTube üzerinde düzenli
-      olarak bağlama tanıtım ve satış videoları yayınlamakdayız. Bu videolar
-      sayesinde alacağınız bağlamanın sesini dinleyip daha rahat inceleme
-      fırsatı elde etmiş oluyorsunuz.
-    </div>
+    <PageShell>
+      <header className="page-header">
+        <h1 className="font-display">Hakkımızda</h1>
+        <p>{tenant.brand.name}</p>
+      </header>
+      <div className="prose-block">
+        <p>{tenant.brand.about}</p>
+      </div>
+    </PageShell>
   );
 };
 

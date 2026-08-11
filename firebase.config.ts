@@ -16,13 +16,32 @@ import { getAuth } from "firebase/auth";
 import { modifyString } from "./lib/genFunc";
 import { Baglama } from "./lib/Interfaces";
 
+function requireEnv(value: string | undefined, name: string): string {
+  if (!value) {
+    throw new Error(`Missing required env: ${name}`);
+  }
+  return value;
+}
+
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_API_KEY!,
-  authDomain: process.env.NEXT_PUBLIC_AUTH_DOMAIN!,
-  projectId: process.env.NEXT_PUBLIC_PROJECT_ID!,
-  storageBucket: process.env.NEXT_PUBLIC_STORAGE_BUCKET!,
-  messagingSenderId: process.env.NEXT_PUBLIC_MESSAGING_SENDER_ID!,
-  appId: process.env.NEXT_PUBLIC_APP_ID!,
+  apiKey: requireEnv(process.env.NEXT_PUBLIC_API_KEY, "NEXT_PUBLIC_API_KEY"),
+  authDomain: requireEnv(
+    process.env.NEXT_PUBLIC_AUTH_DOMAIN,
+    "NEXT_PUBLIC_AUTH_DOMAIN",
+  ),
+  projectId: requireEnv(
+    process.env.NEXT_PUBLIC_PROJECT_ID,
+    "NEXT_PUBLIC_PROJECT_ID",
+  ),
+  storageBucket: requireEnv(
+    process.env.NEXT_PUBLIC_STORAGE_BUCKET,
+    "NEXT_PUBLIC_STORAGE_BUCKET",
+  ),
+  messagingSenderId: requireEnv(
+    process.env.NEXT_PUBLIC_MESSAGING_SENDER_ID,
+    "NEXT_PUBLIC_MESSAGING_SENDER_ID",
+  ),
+  appId: requireEnv(process.env.NEXT_PUBLIC_APP_ID, "NEXT_PUBLIC_APP_ID"),
 };
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
@@ -39,6 +58,7 @@ const addBaglama = async (baglama: {
   description: string;
   youtubeLink: string;
   images: string[];
+  fiyat: number;
 }) => {
   const data = {
     ...baglama,
@@ -51,13 +71,24 @@ const addBaglama = async (baglama: {
   return result;
 };
 
-const addCategory = async (title: string) => {
-  const data = {
-    title,
-    created_at: serverTimestamp(),
-  };
-  const result = await setDoc(doc(db, "categories", modifyString(title)), data);
-  return result;
+const updateBaglama = async (
+  id: string,
+  baglama: {
+    title: string;
+    boyut: string;
+    govdeAgaci: string;
+    tekneBoyu: string;
+    tip: string;
+    description: string;
+    youtubeLink: string;
+    images: string[];
+    fiyat: number;
+  },
+) => {
+  await updateDoc(doc(db, "baglama", id), {
+    ...baglama,
+    updated_at: serverTimestamp(),
+  });
 };
 
 const getBaglamalar = async () => {
@@ -83,18 +114,19 @@ const getBaglama = async (id: string) => {
   const animeCollectionRef = doc(db, "baglama", id);
   const querySnapshot = await getDoc(animeCollectionRef);
   if (querySnapshot.exists()) {
+    const data = querySnapshot.data();
     const queryList: Baglama = {
-      created_at: querySnapshot.data().created_at.seconds,
-      tip: querySnapshot.data().tip,
-      images: querySnapshot.data().images,
-      description: querySnapshot.data().description,
-      title: querySnapshot.data().title,
-      id: querySnapshot.id || modifyString(querySnapshot.data().title),
-      boyut: querySnapshot.data().boyut,
-      govdeAgaci: querySnapshot.data().govdeAgaci,
-      tekneBoyu: querySnapshot.data().tekneBoyu,
-      fiyat: querySnapshot.data().fiyat,
-      youtubeLink: querySnapshot.data().youtubeLink,
+      created_at: data.created_at?.seconds,
+      tip: data.tip ?? "",
+      images: data.images ?? [],
+      description: data.description ?? "",
+      title: data.title ?? "",
+      id: querySnapshot.id || modifyString(data.title),
+      boyut: data.boyut ?? "",
+      govdeAgaci: data.govdeAgaci ?? "",
+      tekneBoyu: data.tekneBoyu ?? "",
+      fiyat: data.fiyat,
+      youtubeLink: data.youtubeLink ?? "",
     };
     return queryList;
   }
@@ -106,6 +138,7 @@ export {
   storage,
   auth,
   addBaglama,
+  updateBaglama,
   firebaseConfig,
   getBaglamalar,
   getBaglama,

@@ -1,16 +1,16 @@
 # Biladerler Müzik — Yapı Dökümanı
 
-Bağlama kataloğu ve mağaza sitesi. Next.js App Router ile arayüz, Firebase ile veri/depolama, NextAuth ile oturum yönetimi.
+Bağlama kataloğu ve mağaza sitesi. Next.js App Router ile arayüz, Firebase ile veri/depolama ve oturum yönetimi.
 
 ## 1. Genel bakış
 
 | Katman | Teknoloji |
 |--------|-----------|
-| Framework | Next.js `14.0.1` (App Router) + React 18 |
-| Dil | TypeScript |
-| Veri | Firebase Firestore + Storage + Auth |
-| Oturum | NextAuth v4 (`pages/api` catch-all) |
-| UI | Ant Design 5, Tailwind CSS 3, Font Awesome 6.1.2 |
+| Framework | Next.js `15.5` (App Router) + React 19 |
+| Dil | TypeScript 5.9 |
+| Veri | Firebase 12 (Firestore + Storage + Auth) |
+| Oturum | Firebase Auth + `AuthProvider` / `useAuth` |
+| UI | Ant Design 5.29, Tailwind CSS 3.4, Font Awesome 6.1.2 |
 
 ### Scripts (`package.json`)
 
@@ -29,16 +29,14 @@ flowchart TB
     Layout[layout.tsx]
     Routes["/ /baglamalar /ekle /slug /login /profile /hakkimizda"]
   end
-  subgraph api [Pages API]
-    NextAuth["/api/auth/..."]
-  end
+  Layout --> AuthProvider[AuthProvider useAuth]
   Layout --> Components[Navbar BaglamaCard Form vs]
+  AuthProvider --> FirebaseAuth[Firebase Auth]
   Routes --> FirebaseFS[(Firestore baglama)]
-  NextAuth --> FirebaseAuth[Firebase Auth]
   Components --> FirebaseStorage[Storage images]
 ```
 
-Hybrid routing: sayfalar `app/` altında; auth API legacy `pages/api/` altında. **Middleware yok** — rota koruması edge’de yapılmıyor.
+Hybrid routing yok: tüm UI `app/` altında. **Middleware yok** — rota koruması `AuthGuard` / `useAuth` ile istemci tarafında.
 
 ---
 
@@ -47,7 +45,7 @@ Hybrid routing: sayfalar `app/` altında; auth API legacy `pages/api/` altında.
 ```
 biladerlermuzik/
 ├── app/                         # App Router sayfalar ve root layout
-│   ├── layout.tsx               # Navbar, SessionProvider, Ant Design registry
+│   ├── layout.tsx               # Navbar, AuthProvider, Ant Design registry
 │   ├── globals.css              # Tailwind + global stiller
 │   ├── page.tsx                 # Ana sayfa (/)
 │   ├── baglamalar/
@@ -58,8 +56,8 @@ biladerlermuzik/
 │   ├── profile/page.tsx
 │   └── hakkimizda/page.tsx
 ├── components/                  # İstemci UI bileşenleri
+├── context/                     # AuthContext
 ├── lib/                         # Tipler, yardımcılar, Antd SSR
-├── pages/api/auth/[...nextauth].ts
 ├── assets/fontawesome-6.1.2/    # Vendored Font Awesome
 ├── public/                      # Statik dosyalar
 ├── firebase.config.ts           # Firebase init + veri katmanı
@@ -74,8 +72,8 @@ biladerlermuzik/
 |-----|-----|
 | `app/` | Rotalar, layout, `globals.css` |
 | `components/` | Yeniden kullanılan UI |
+| `context/` | `AuthProvider` / `useAuth` |
 | `lib/` | Tipler, form seçenekleri, slug, Ant Design StyleProvider |
-| `pages/api/auth/` | NextAuth API |
 | `firebase.config.ts` | Firebase init + Firestore/Auth/Storage yardımcıları |
 | `assets/fontawesome-6.1.2/` | Font Awesome CSS |
 
@@ -94,13 +92,12 @@ Path alias: `@/*` → proje kökü (`tsconfig.json`).
 | `/login` | `app/login/page.tsx` | Credentials giriş |
 | `/profile` | `app/profile/page.tsx` | Oturum bilgisi + profil güncelleme |
 | `/hakkimizda` | `app/hakkimizda/page.tsx` | Mağaza / hakkımızda (statik metin) |
-| `/api/auth/*` | `pages/api/auth/[...nextauth].ts` | NextAuth (sign-in, session, callback, CSRF) |
 
 ### Layout
 
 - Tek root layout: `app/layout.tsx`
 - Metadata: title “Bilader Müzik”, description “Biladerler Müzik Evi”
-- Sıra: `StyledComponentsRegistry` → `SessionProvider` → `Navbar` + `NewButton` + `{children}`
+- Sıra: `StyledComponentsRegistry` → `AuthProvider` → `Navbar` + `NewButton` + `{children}`
 - Nested layout yok
 - `middleware.ts` yok
 
@@ -246,7 +243,7 @@ Tek kaynak doğruluk: tarayıcıdaki Firebase Auth. `onAuthStateChanged` ile otu
 3. Navbar / FloatButton / AuthGuard `useAuth` ile tepki verir
 4. `logout()` oturumu kapatır; korumalı sayfalar `/login`’e yönlendirir
 
-Not: Eski NextAuth API (`pages/api/auth/[...nextauth].ts`) UI’dan koparıldı; oturum artık NextAuth session üzerinden gitmiyor.
+Not: NextAuth kaldırıldı; oturum yalnızca Firebase Auth + Context üzerinden yönetilir.
 
 ---
 
@@ -278,8 +275,6 @@ Kurulum: `.env.example` → `.env` kopyala. `.env` gitignore’dadır; repoda ya
 
 | Değişken | Kullanım |
 |----------|----------|
-| `NEXTAUTH_URL` / `NEXTAUTH_SECRET` | NextAuth |
-| `GITHUB_ID` / `GITHUB_SECRET` | GitHub OAuth (opsiyonel) |
 | `NEXT_PUBLIC_API_KEY` | Firebase API key |
 | `NEXT_PUBLIC_AUTH_DOMAIN` | Firebase auth domain |
 | `NEXT_PUBLIC_PROJECT_ID` | Firebase project id |

@@ -1,7 +1,8 @@
 "use client";
-import React from "react";
-import { PlusOutlined } from "@ant-design/icons";
+
+import { PlusOutlined, LinkOutlined, DeleteOutlined } from "@ant-design/icons";
 import {
+  App,
   Button,
   Col,
   Form,
@@ -9,230 +10,494 @@ import {
   InputNumber,
   Row,
   Select,
+  Space,
   Upload,
-  message,
-  notification,
+  type UploadFile,
+  type UploadProps,
 } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { boyut, govdeAgaci, tekneBoyu, tip } from "@/lib/generalValues";
-import { UploadChangeParam } from "antd/lib/upload";
-import { addBaglama, storage } from "@/firebase.config";
+import { addBaglama, updateBaglama, storage } from "@/firebase.config";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { modifyString } from "@/lib/genFunc";
+import { useAuth } from "@/context/AuthContext";
+import type { Baglama } from "@/lib/Interfaces";
 
-const BaglamaForm = () => {
-  const [form] = Form.useForm();
-  const [api, contextHolder] = notification.useNotification();
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+type FieldType = {
+  title: string;
+  boyut: number;
+  govdeAgaci: number;
+  tekneBoyu: number;
+  tip: number;
+  description: string;
+  youtubeLink: string;
+  fiyat: number;
+};
 
-  const handleImageChange = async (info: UploadChangeParam) => {
-    console.log(info.fileList);
-    if (info.file.status === "done" && info.file.originFileObj) {
-      try {
-        console.log("first");
-        const storageRef = ref(storage, "images/" + info.file.name);
-        await uploadBytes(storageRef, info.file.originFileObj);
-        const imageUrl = await getDownloadURL(storageRef);
-        console.log(imageUrl);
-        setImageUrls((prevUrls) => [...prevUrls, imageUrl]);
-      } catch (error: any) {
-        message.error("Resmi yüklerken hata oluştu: " + error.message);
+type GalleryItem = {
+  id: string;
+  url: string;
+  name: string;
+  source: "upload" | "url";
+};
+
+const MAX_IMAGES = 12;
+
+function storageErrorMessage(error: unknown): string {
+  const err = error as { code?: string; message?: string };
+  if (
+    err.code === "storage/quota-exceeded" ||
+    err.message?.includes("quota-exceeded") ||
+    err.message?.includes("Quota for bucket")
+  ) {
+    return "Firebase Storage kotası dolu. Konsolda Blaze planına geçin veya eski dosyaları silin. Şimdilik aşağıdaki “URL ile ekle” seçeneğini kullanabilirsiniz.";
+  }
+  return err.message || "Resim yüklenemedi";
+}
+
+function resolveOptionId(
+  raw: string | number | undefined | null,
+  list: { id: number; label: string }[],
+): number | undefined {
+  if (raw === undefined || raw === null || raw === "") return undefined;
+  const asNum = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isNaN(asNum) && String(asNum) === String(raw).trim()) {
+    if (list.some((item) => item.id === asNum)) return asNum;
+  }
+  return list.find((item) => item.label === String(raw))?.id;
+}
+
+function baglamaToFormValues(baglama: Baglama): Partial<FieldType> {
+  return {
+    title: baglama.title,
+    description: baglama.description,
+    youtubeLink: baglama.youtubeLink,
+    fiyat: baglama.fiyat,
+    boyut: resolveOptionId(
+      baglama.boyut,
+      boyut.map((b) => ({ id: b.id, label: b.tip })),
+    ),
+    tip: resolveOptionId(
+      baglama.tip,
+      tip.map((t) => ({ id: t.id, label: t.isim })),
+    ),
+    govdeAgaci: resolveOptionId(
+      baglama.govdeAgaci,
+      govdeAgaci.map((g) => ({ id: g.id, label: g.isim })),
+    ),
+    tekneBoyu: Number(baglama.tekneBoyu) || undefined,
+  };
+}
+
+function imagesToGallery(images: string[] = []): GalleryItem[] {
+  return images.map((url, index) => ({
+    id: `existing-${index}-${url.slice(-24)}`,
+    url,
+    name: `Görsel ${index + 1}`,
+    source: "url" as const,
+  }));
+}
+
+type Props = {
+  initial?: Baglama;
+  onCancel?: () => void;
+  onUpdated?: () => void;
+};
+
+const BaglamaForm = ({ initial, onCancel, onUpdated }: Props) => {
+  const isEdit = Boolean(initial?.id);
+  const { user, loading: authLoading } = useAuth();
+  const { message, notification } = App.useApp();
+  const [form] = Form.useForm<FieldType>();
+  const router = useRouter();
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [gallery, setGallery] = useState<GalleryItem[]>(() =>
+    initial?.images ? imagesToGallery(initial.images) : [],
+  );
+  const [externalUrl, setExternalUrl] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (!initial) return;
+    form.setFieldsValue(baglamaToFormValues(initial));
+    setGallery(imagesToGallery(initial.images));
+    setFileList([]);
+  }, [initial, form]);
+
+  const addGalleryItem = (item: GalleryItem) => {
+    setGallery((prev) => {
+      if (prev.some((g) => g.url === item.url)) return prev;
+      if (prev.length >= MAX_IMAGES) {
+        message.warning(`En fazla ${MAX_IMAGES} görsel ekleyebilirsiniz`);
+        return prev;
       }
+      return [...prev, item];
+    });
+  };
+
+  const removeGalleryItem = (id: string) => {
+    setGallery((prev) => prev.filter((item) => item.id !== id));
+    setFileList((prev) => prev.filter((file) => file.uid !== id));
+  };
+
+  const customRequest: UploadProps["customRequest"] = async (options) => {
+    const { file, onSuccess, onError } = options;
+    const uploadFile = file as File & { uid?: string };
+    const uid =
+      typeof file === "object" && file !== null && "uid" in file
+        ? String((file as UploadFile).uid)
+        : crypto.randomUUID();
+
+    setUploading(true);
+    try {
+      const safeName = uploadFile.name.replace(/[^\w.\-]+/g, "_");
+      const storageRef = ref(storage, `images/${uid}-${safeName}`);
+      await uploadBytes(storageRef, uploadFile, {
+        contentType: uploadFile.type || "image/jpeg",
+        cacheControl: "public,max-age=31536000",
+      });
+      const imageUrl = await getDownloadURL(storageRef);
+      addGalleryItem({
+        id: uid,
+        url: imageUrl,
+        name: uploadFile.name,
+        source: "upload",
+      });
+      onSuccess?.(imageUrl);
+    } catch (error: unknown) {
+      message.error(storageErrorMessage(error));
+      onError?.(error as Error);
+      setFileList((prev) => prev.filter((f) => f.uid !== uid));
+    } finally {
+      setUploading(false);
     }
   };
 
-  const onFinish = async (values: any) => {
-    values.images = imageUrls;
-    console.log(values);
-
-    // try {
-    //   await addBaglama(values);
-    //   message.success("Yeni Bağlama Başarıyla Eklendi.");
-    // } catch (error: any) {
-    //   api.error({
-    //     message: error.message,
-    //   });
-    // }
+  const addExternalImage = () => {
+    const url = externalUrl.trim();
+    if (!url) return;
+    try {
+      // eslint-disable-next-line no-new
+      new URL(url);
+    } catch {
+      message.error("Geçerli bir görsel URL’si girin");
+      return;
+    }
+    addGalleryItem({
+      id: crypto.randomUUID(),
+      url,
+      name: url.split("/").pop() || "görsel",
+      source: "url",
+    });
+    setExternalUrl("");
   };
 
-  const onFinishFailed = (errorInfo: any) => {
-    console.log("Failed:", errorInfo);
-  };
+  const onFinish = async (values: FieldType) => {
+    if (gallery.length === 0) {
+      message.error("En az bir görsel ekleyin");
+      return;
+    }
+    if (uploading) {
+      message.warning("Yükleme bitene kadar bekleyin");
+      return;
+    }
+    if (authLoading) {
+      message.warning("Oturum kontrol ediliyor, tekrar deneyin");
+      return;
+    }
+    if (!user) {
+      message.error(
+        isEdit
+          ? "Güncellemek için giriş yapmalısınız"
+          : "Eklemek için giriş yapmalısınız",
+      );
+      router.replace("/login");
+      return;
+    }
 
-  type FieldType = {
-    title: string;
-    boyut: string;
-    govdeAgaci: string;
-    tekneBoyu: string;
-    tip: string;
-    description: string;
-    youtubeLink: string;
-    images: string[];
-    fiyat: number;
+    const payload = {
+      title: values.title,
+      boyut: boyut.find((b) => b.id === values.boyut)?.tip ?? "",
+      tip: tip.find((t) => t.id === values.tip)?.isim ?? "",
+      govdeAgaci:
+        govdeAgaci.find((g) => g.id === values.govdeAgaci)?.isim ?? "",
+      tekneBoyu: String(values.tekneBoyu),
+      description: values.description,
+      youtubeLink: values.youtubeLink,
+      images: gallery.map((item) => item.url),
+      fiyat: values.fiyat,
+    };
+
+    setSubmitting(true);
+    try {
+      if (isEdit && initial) {
+        await updateBaglama(initial.id, payload);
+        message.success("Bağlama güncellendi");
+        onUpdated?.();
+        router.refresh();
+      } else {
+        await addBaglama(payload);
+        message.success("Bağlama başarıyla eklendi");
+        form.resetFields();
+        setFileList([]);
+        setGallery([]);
+        router.push(`/baglamalar/${modifyString(values.title)}`);
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      notification.error({
+        message: err.message || (isEdit ? "Güncelleme başarısız" : "Kayıt başarısız"),
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <Form
       form={form}
+      layout="vertical"
+      requiredMark="optional"
       onFinish={onFinish}
-      onFinishFailed={onFinishFailed}
       autoComplete="off"
+      className="baglama-form"
     >
-      <Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }}>
-        <Col span={4}>
-          <Form.Item<FieldType>
-            name="boyut"
-            rules={[{ required: true, message: "Boyut seçin!" }]}
-            className="w-full"
-          >
-            <Select
-              className="w-full"
-              allowClear
-              placeholder="Boyut"
-              options={boyut.map((boyut) => {
-                return {
-                  value: boyut.id,
-                  label: boyut.tip,
-                };
-              })}
-            />
-          </Form.Item>
-        </Col>
-        <Col span={4}>
-          <Form.Item<FieldType>
-            name="govdeAgaci"
-            rules={[{ required: true, message: "Gövde Ağacı seçin!" }]}
-          >
-            <Select
-              allowClear
-              placeholder="Gövde Ağacı"
-              options={govdeAgaci.map((govdeAgaci) => {
-                return {
-                  value: govdeAgaci.id,
-                  label: govdeAgaci.isim,
-                };
-              })}
-            />
-          </Form.Item>
-        </Col>
-        <Col span={4}>
-          <Form.Item<FieldType>
-            name="tip"
-            rules={[{ required: true, message: "Tipini seçin!" }]}
-          >
-            <Select
-              allowClear
-              placeholder="Yapım şeklini seçin"
-              options={tip.map((tip) => {
-                return {
-                  value: tip.id,
-                  label: tip.isim,
-                };
-              })}
-            />
-          </Form.Item>
-        </Col>
+        <Form.Item<FieldType>
+          name="title"
+          label="Başlık"
+          rules={[{ required: true, message: "Başlık girin" }]}
+        >
+          <Input size="large" placeholder="Örn. Uzun sap 46 tekne dut" />
+        </Form.Item>
 
-        <Col span={4}>
-          <Form.Item<FieldType>
-            name="tekneBoyu"
-            rules={[{ required: true, message: "Tekne Boyu seçin!" }]}
-          >
-            <Select
-              allowClear
-              placeholder="Tekne Boyu seçin"
-              options={tekneBoyu.map((tekneBoyu) => {
-                return {
-                  value: tekneBoyu,
-                  label: tekneBoyu,
-                };
-              })}
-            />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item<FieldType>
-            name="description"
-            rules={[
-              {
-                required: true,
-                message: "Geçerli bir resim yükleyin",
-              },
-            ]}
-          >
-            <Input.TextArea className="w-full" placeholder="Açıklama Girin" />
-          </Form.Item>
-        </Col>
-      </Row>
-      <Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }}>
-        <Col span={6}>
-          <Form.Item<FieldType>
-            name="title"
-            rules={[
-              {
-                required: true,
-                message: "Başlık Girin",
-              },
-            ]}
-          >
-            <Input className="w-full" placeholder="Başlık" type="text" />
-          </Form.Item>
-        </Col>
-        <Col span={4}>
-          <Form.Item<FieldType>
-            name="fiyat"
-            rules={[
-              {
-                required: true,
-                message: "Fiyat Girin",
-              },
-            ]}
-          >
-            <InputNumber className="w-full" placeholder="Fiyat" />
-          </Form.Item>
-        </Col>
-        <Col span={6}>
-          <Form.Item<FieldType>
-            name="youtubeLink"
-            rules={[
-              {
-                required: true,
-                message: "Geçerli bir youtub linki yükleyin",
-              },
-            ]}
-          >
-            <Input className="w-full" placeholder="Youtube Link" type="url" />
-          </Form.Item>
-        </Col>
-        <Col>
-          <Form.Item<FieldType> name="images">
-            <Upload
-              listType="picture-card"
-              showUploadList={true}
-              beforeUpload={() => false}
-              onChange={handleImageChange}
+        <Row gutter={[16, 0]}>
+          <Col xs={24} sm={12} md={6}>
+            <Form.Item<FieldType>
+              name="boyut"
+              label="Boyut"
+              rules={[{ required: true, message: "Boyut seçin" }]}
             >
-              <div>
-                <PlusOutlined />
-                <div style={{ marginTop: 8 }}>Yükle</div>
-              </div>
-            </Upload>
-          </Form.Item>
-        </Col>
-      </Row>
-      <Form.Item>
-        <Button className="float-right" type="primary" htmlType="submit">
-          Gönder
-        </Button>
-      </Form.Item>
+              <Select
+                size="large"
+                allowClear
+                placeholder="Seçin"
+                options={boyut.map((item) => ({
+                  value: item.id,
+                  label: item.tip,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Form.Item<FieldType>
+              name="tip"
+              label="Yapım şekli"
+              rules={[{ required: true, message: "Tip seçin" }]}
+            >
+              <Select
+                size="large"
+                allowClear
+                placeholder="Seçin"
+                options={tip.map((item) => ({
+                  value: item.id,
+                  label: item.isim,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Form.Item<FieldType>
+              name="govdeAgaci"
+              label="Gövde ağacı"
+              rules={[{ required: true, message: "Gövde ağacı seçin" }]}
+            >
+              <Select
+                size="large"
+                allowClear
+                placeholder="Seçin"
+                options={govdeAgaci.map((item) => ({
+                  value: item.id,
+                  label: item.isim,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Form.Item<FieldType>
+              name="tekneBoyu"
+              label="Tekne boyu"
+              rules={[{ required: true, message: "Tekne boyu seçin" }]}
+            >
+              <Select
+                size="large"
+                allowClear
+                placeholder="Seçin"
+                options={tekneBoyu.map((item) => ({
+                  value: item,
+                  label: String(item),
+                }))}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
 
-      {imageUrls.map((image, index) => (
-        <img
-          key={index}
-          src={image} // Burada "image/jpeg" türünü ve resim formatını değiştirebilirsiniz.
-          alt="Base64 Resim"
-        />
-      ))}
-    </Form>
+        <Row gutter={[16, 0]}>
+          <Col xs={24} sm={8}>
+            <Form.Item<FieldType>
+              name="fiyat"
+              label="Fiyat (₺)"
+              rules={[{ required: true, message: "Fiyat girin" }]}
+            >
+              <InputNumber
+                size="large"
+                className="w-full"
+                min={0}
+                step={100}
+                placeholder="0"
+                formatter={(value) =>
+                  `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                }
+                parser={(value) =>
+                  Number(value?.replace(/\./g, "") || 0) as 0
+                }
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={16}>
+            <Form.Item<FieldType>
+              name="youtubeLink"
+              label="YouTube linki"
+              rules={[
+                { required: true, message: "YouTube linki girin" },
+                { type: "url", message: "Geçerli bir URL girin" },
+              ]}
+            >
+              <Input
+                size="large"
+                placeholder="https://www.youtube.com/watch?v=..."
+                type="url"
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Form.Item<FieldType>
+          name="description"
+          label="Açıklama"
+          rules={[{ required: true, message: "Açıklama girin" }]}
+        >
+          <Input.TextArea
+            rows={4}
+            placeholder="Bağlama hakkında kısa bilgi"
+            showCount
+            maxLength={800}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Görseller"
+          required
+          extra="Birden fazla dosya seçebilirsiniz. Dosyalar orijinal çözünürlükte yüklenir."
+        >
+          <Upload
+            multiple
+            accept="image/jpeg,image/png,image/webp,image/gif,image/heic"
+            listType="picture-card"
+            fileList={fileList}
+            disabled={gallery.length >= MAX_IMAGES}
+            beforeUpload={() => {
+              if (gallery.length >= MAX_IMAGES) {
+                message.warning(`En fazla ${MAX_IMAGES} görsel`);
+                return Upload.LIST_IGNORE;
+              }
+              return true;
+            }}
+            customRequest={customRequest}
+            onChange={({ fileList: next }) => {
+              setFileList(
+                next.filter(
+                  (f) => f.status === "uploading" || f.status === "done",
+                ),
+              );
+            }}
+            onRemove={(file) => {
+              removeGalleryItem(file.uid);
+              return true;
+            }}
+            showUploadList={{ showPreviewIcon: true }}
+          >
+            {gallery.length >= MAX_IMAGES ? null : (
+              <div className="baglama-form__upload">
+                <PlusOutlined />
+                <span>Dosya seç</span>
+              </div>
+            )}
+          </Upload>
+
+          <div className="baglama-form__url-add">
+            <Space.Compact style={{ width: "100%" }}>
+              <Input
+                size="large"
+                prefix={<LinkOutlined />}
+                placeholder="veya görsel URL’si yapıştır"
+                value={externalUrl}
+                onChange={(e) => setExternalUrl(e.target.value)}
+                onPressEnter={(e) => {
+                  e.preventDefault();
+                  addExternalImage();
+                }}
+              />
+              <Button size="large" type="default" onClick={addExternalImage}>
+                URL ekle
+              </Button>
+            </Space.Compact>
+          </div>
+
+          {gallery.length > 0 ? (
+            <ul className="baglama-form__gallery">
+              {gallery.map((item, index) => (
+                <li key={item.id}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={item.url} alt={item.name} />
+                  <div className="baglama-form__gallery-meta">
+                    <span>
+                      {index === 0 ? "Kapak · " : ""}
+                      {item.source === "url" ? "URL" : "Yükleme"}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Görseli kaldır"
+                      onClick={() => removeGalleryItem(item.id)}
+                    >
+                      <DeleteOutlined />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </Form.Item>
+
+        <Form.Item className="baglama-form__actions">
+          <Space>
+            {onCancel ? (
+              <Button size="large" onClick={onCancel} disabled={submitting}>
+                İptal
+              </Button>
+            ) : null}
+            <Button
+              type="primary"
+              htmlType="submit"
+              size="large"
+              loading={submitting || uploading}
+            >
+              {isEdit ? "Güncelle" : "Kaydet"}
+            </Button>
+          </Space>
+        </Form.Item>
+      </Form>
   );
 };
 

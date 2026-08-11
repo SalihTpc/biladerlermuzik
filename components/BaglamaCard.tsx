@@ -1,7 +1,6 @@
 "use client";
 import { modifyString } from "@/lib/genFunc";
 import { Card } from "antd";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 type Props = {
@@ -11,19 +10,32 @@ type Props = {
   fiyat: number;
 };
 
-const BaglamaCard = ({ title, image, description }: Props) => {
+const BaglamaCard = ({ title, image, description, fiyat }: Props) => {
   const router = useRouter();
+  const priceLabel =
+    typeof fiyat === "number" && !Number.isNaN(fiyat)
+      ? new Intl.NumberFormat("tr-TR", {
+          style: "currency",
+          currency: "TRY",
+          maximumFractionDigits: 0,
+        }).format(fiyat)
+      : null;
+
   return (
     <Card
       hoverable
-      className="w-[300px] h-[400px]"
-      bodyStyle={{ padding: "0 2px 2px 2px" }}
-      cover={<img alt={title} src={image} />}
+      className="baglama-card"
+      styles={{ body: { padding: "0.85rem 1rem 1rem" } }}
+      cover={
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="baglama-card__cover" alt={title} src={image} />
+      }
       onClick={() =>
         router.push(`/baglamalar/${modifyString(title)}`, { scroll: false })
       }
     >
       <Card.Meta title={title} description={description} />
+      {priceLabel ? <p className="baglama-card__price">{priceLabel}</p> : null}
     </Card>
   );
 };

@@ -1,6 +1,6 @@
 # Biladerler Müzik
 
-Bağlama kataloğu için Next.js 14 mağaza sitesi. Firebase (Firestore, Auth, Storage) ve NextAuth ile çalışır; arayüzde Ant Design ve Tailwind kullanılır.
+Bağlama kataloğu için Next.js 15 mağaza sitesi. Firebase (Firestore, Auth, Storage) ile çalışır; arayüzde Ant Design ve Tailwind kullanılır.
 
 ## Başlangıç
 
@@ -20,15 +20,12 @@ npm run dev
 
 [http://localhost:3000](http://localhost:3000) adresinde açılır.
 
-`.env.example` içindeki Firebase değerleri mevcut proje içindir; `NEXTAUTH_SECRET` değerini üretimde mutlaka değiştirin. Yerel `.env` dosyası git’e **eklenmez**.
+`.env.example` içindeki Firebase değerleri mevcut proje içindir. Yerel `.env` dosyası git’e **eklenmez**.
 
 ## Ortam değişkenleri
 
 | Değişken | Açıklama |
 |----------|----------|
-| `NEXTAUTH_URL` | Uygulama URL’i (ör. `http://localhost:3000`) |
-| `NEXTAUTH_SECRET` | NextAuth oturum sırrı |
-| `GITHUB_ID` / `GITHUB_SECRET` | GitHub OAuth (opsiyonel) |
 | `NEXT_PUBLIC_API_KEY` | Firebase API key |
 | `NEXT_PUBLIC_AUTH_DOMAIN` | Firebase auth domain |
 | `NEXT_PUBLIC_PROJECT_ID` | Firebase project id |

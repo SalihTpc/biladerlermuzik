@@ -1,7 +1,9 @@
-import MyImages from "@/components/MyImages";
+import PageShell from "@/components/PageShell";
+import BaglamaDetail from "@/components/BaglamaDetail";
 import { getBaglama, getBaglamalar } from "@/firebase.config";
 import { notFound } from "next/navigation";
-import React from "react";
+
+export const dynamic = "force-dynamic";
 
 export async function generateStaticParams() {
   const baglamalar = await getBaglamalar();
@@ -10,18 +12,15 @@ export async function generateStaticParams() {
   }));
 }
 
-const page = async ({ params }: { params: { slug: string } }) => {
-  const { slug } = params;
+const page = async ({ params }: { params: Promise<{ slug: string }> }) => {
+  const { slug } = await params;
   const baglama = await getBaglama(slug);
   if (!baglama) notFound();
+
   return (
-    <div className="flex items-center justify-center">
-      <div>
-        {baglama.title}
-        <p>{baglama.fiyat}</p>
-        <MyImages images={baglama.images} />
-      </div>
-    </div>
+    <PageShell>
+      <BaglamaDetail baglama={baglama} />
+    </PageShell>
   );
 };
 

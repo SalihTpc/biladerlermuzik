@@ -1,30 +1,44 @@
 "use client";
+
 import ProfileForm from "@/components/ProfileForm";
 import AuthGuard from "@/components/AuthGuard";
 import PageShell from "@/components/PageShell";
 import { useAuth } from "@/context/AuthContext";
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const ProfilePage = () => {
-  const { user } = useAuth();
-  const [imageBroken, setImageBroken] = useState(false);
+  const { user, photoURL } = useAuth();
+  const [editing, setEditing] = useState(false);
+  const [livePreview, setLivePreview] = useState<string | null>(null);
 
-  useEffect(() => {
-    setImageBroken(false);
-  }, [user?.photoURL]);
-
-  const showPhoto = Boolean(user?.photoURL) && !imageBroken;
   const needsProfileForm =
-    !user?.displayName || !user?.photoURL || imageBroken;
+    editing || !user?.displayName || !photoURL;
+
+  const displayPhoto = needsProfileForm
+    ? livePreview ?? photoURL
+    : photoURL;
 
   return (
     <AuthGuard>
       {user && (
         <PageShell>
-          <header className="page-header">
-            <h1 className="font-display">Profil</h1>
-            <p>Hesap bilgileriniz</p>
+          <header className="page-header detail-topbar">
+            <div>
+              <h1 className="font-display">Profil</h1>
+              <p>Hesap bilgileriniz</p>
+            </div>
+            {!needsProfileForm ? (
+              <button
+                type="button"
+                className="detail-action-btn detail-action-btn--edit"
+                onClick={() => {
+                  setLivePreview(photoURL);
+                  setEditing(true);
+                }}
+              >
+                Düzenle
+              </button>
+            ) : null}
           </header>
           <div className="profile-layout">
             <div className="flex flex-col items-center justify-center gap-2">
@@ -32,26 +46,30 @@ const ProfilePage = () => {
                 {user.displayName}
               </p>
               <p className="m-0 text-muted">{user.email}</p>
-              {showPhoto ? (
-                <Image
-                  width={320}
-                  height={320}
-                  src={user.photoURL!}
-                  alt="User Image"
-                  unoptimized
-                  onError={() => setImageBroken(true)}
-                  className="max-sm:h-60 max-sm:w-60 bg-white rounded-theme"
-                  style={{ borderRadius: "var(--radius)", marginTop: "0.75rem" }}
+              {displayPhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={displayPhoto.slice(0, 64)}
+                  src={displayPhoto}
+                  alt="Profil"
+                  className="profile-avatar"
                 />
-              ) : user.photoURL ? (
-                <p className="m-0 text-sm text-muted">
-                  Profil görseli yüklenemedi. Yeni bir URL girin.
-                </p>
-              ) : null}
+              ) : (
+                <p className="m-0 text-sm text-muted">Profil görseli yok</p>
+              )}
             </div>
             {needsProfileForm ? (
-              <div className="auth-panel" style={{ margin: 0, width: "100%", maxWidth: "28rem" }}>
-                <ProfileForm />
+              <div
+                className="auth-panel"
+                style={{ margin: 0, width: "100%", maxWidth: "28rem" }}
+              >
+                <ProfileForm
+                  onPreviewChange={setLivePreview}
+                  onSaved={() => {
+                    setEditing(false);
+                    setLivePreview(null);
+                  }}
+                />
               </div>
             ) : null}
           </div>

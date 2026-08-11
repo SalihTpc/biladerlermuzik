@@ -91,6 +91,10 @@ const updateBaglama = async (
   });
 };
 
+const deleteBaglama = async (id: string) => {
+  await deleteDoc(doc(db, "baglama", id));
+};
+
 const getBaglamalar = async () => {
   const animeCollectionRef = collection(db, "baglama");
   const querySnapshot = await getDocs(animeCollectionRef);
@@ -132,6 +136,30 @@ const getBaglama = async (id: string) => {
   }
 };
 
+const getUserProfile = async (uid: string) => {
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) return null;
+  const data = snap.data();
+  return {
+    displayName: (data.displayName as string | undefined) ?? null,
+    photoURL: (data.photoURL as string | undefined) ?? null,
+  };
+};
+
+const saveUserProfile = async (
+  uid: string,
+  profile: { displayName?: string | null; photoURL?: string | null },
+) => {
+  await setDoc(
+    doc(db, "users", uid),
+    {
+      ...profile,
+      updated_at: serverTimestamp(),
+    },
+    { merge: true },
+  );
+};
+
 export {
   app,
   db,
@@ -139,7 +167,10 @@ export {
   auth,
   addBaglama,
   updateBaglama,
+  deleteBaglama,
   firebaseConfig,
   getBaglamalar,
   getBaglama,
+  getUserProfile,
+  saveUserProfile,
 };

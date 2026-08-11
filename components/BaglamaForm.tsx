@@ -18,11 +18,16 @@ import {
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { boyut, govdeAgaci, tekneBoyu, tip } from "@/lib/generalValues";
-import { addBaglama, updateBaglama, storage } from "@/firebase.config";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { addBaglama, updateBaglama } from "@/firebase.config";
 import { modifyString } from "@/lib/genFunc";
 import { useAuth } from "@/context/AuthContext";
 import type { Baglama } from "@/lib/Interfaces";
+import {
+  assertGalleryFits,
+  BAGLAMA_IMAGE_OPTIONS,
+  compressImageFile,
+  resolveUploadFile,
+} from "@/lib/imageCompress";
 
 type FieldType = {
   title: string;
@@ -42,19 +47,8 @@ type GalleryItem = {
   source: "upload" | "url";
 };
 
-const MAX_IMAGES = 12;
-
-function storageErrorMessage(error: unknown): string {
-  const err = error as { code?: string; message?: string };
-  if (
-    err.code === "storage/quota-exceeded" ||
-    err.message?.includes("quota-exceeded") ||
-    err.message?.includes("Quota for bucket")
-  ) {
-    return "Firebase Storage kotası dolu. Konsolda Blaze planına geçin veya eski dosyaları silin. Şimdilik aşağıdaki “URL ile ekle” seçeneğini kullanabilirsiniz.";
-  }
-  return err.message || "Resim yüklenemedi";
-}
+/** Firestore boyut limiti nedeniyle makul üst sınır */
+const MAX_IMAGES = 6;
 
 function resolveOptionId(
   raw: string | number | undefined | null,
@@ -126,15 +120,28 @@ const BaglamaForm = ({ initial, onCancel, onUpdated }: Props) => {
     setFileList([]);
   }, [initial, form]);
 
-  const addGalleryItem = (item: GalleryItem) => {
+  const addGalleryItem = (item: GalleryItem): boolean => {
+    let added = false;
     setGallery((prev) => {
-      if (prev.some((g) => g.url === item.url)) return prev;
+      if (prev.some((g) => g.url === item.url)) {
+        return prev;
+      }
       if (prev.length >= MAX_IMAGES) {
         message.warning(`En fazla ${MAX_IMAGES} görsel ekleyebilirsiniz`);
         return prev;
       }
-      return [...prev, item];
+      const next = [...prev, item];
+      try {
+        assertGalleryFits(next.map((g) => g.url));
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        message.error(err.message || "Galeri boyutu aşıldı");
+        return prev;
+      }
+      added = true;
+      return next;
     });
+    return added;
   };
 
   const removeGalleryItem = (id: string) => {
@@ -144,7 +151,6 @@ const BaglamaForm = ({ initial, onCancel, onUpdated }: Props) => {
 
   const customRequest: UploadProps["customRequest"] = async (options) => {
     const { file, onSuccess, onError } = options;
-    const uploadFile = file as File & { uid?: string };
     const uid =
       typeof file === "object" && file !== null && "uid" in file
         ? String((file as UploadFile).uid)
@@ -152,22 +158,21 @@ const BaglamaForm = ({ initial, onCancel, onUpdated }: Props) => {
 
     setUploading(true);
     try {
-      const safeName = uploadFile.name.replace(/[^\w.\-]+/g, "_");
-      const storageRef = ref(storage, `images/${uid}-${safeName}`);
-      await uploadBytes(storageRef, uploadFile, {
-        contentType: uploadFile.type || "image/jpeg",
-        cacheControl: "public,max-age=31536000",
-      });
-      const imageUrl = await getDownloadURL(storageRef);
-      addGalleryItem({
+      const uploadFile = resolveUploadFile(file);
+      const dataUrl = await compressImageFile(uploadFile, BAGLAMA_IMAGE_OPTIONS);
+      const added = addGalleryItem({
         id: uid,
-        url: imageUrl,
+        url: dataUrl,
         name: uploadFile.name,
         source: "upload",
       });
-      onSuccess?.(imageUrl);
+      if (!added) {
+        throw new Error("Görsel eklenemedi");
+      }
+      onSuccess?.(dataUrl);
     } catch (error: unknown) {
-      message.error(storageErrorMessage(error));
+      const err = error as { message?: string };
+      message.error(err.message || "Resim işlenemedi");
       onError?.(error as Error);
       setFileList((prev) => prev.filter((f) => f.uid !== uid));
     } finally {
@@ -232,6 +237,7 @@ const BaglamaForm = ({ initial, onCancel, onUpdated }: Props) => {
 
     setSubmitting(true);
     try {
+      assertGalleryFits(payload.images);
       if (isEdit && initial) {
         await updateBaglama(initial.id, payload);
         message.success("Bağlama güncellendi");
@@ -399,11 +405,11 @@ const BaglamaForm = ({ initial, onCancel, onUpdated }: Props) => {
         <Form.Item
           label="Görseller"
           required
-          extra="Birden fazla dosya seçebilirsiniz. Dosyalar orijinal çözünürlükte yüklenir."
+          extra="Dosyalar cihazınızdan seçilir, tarayıcıda sıkıştırılıp kaydedilir (ek depolama servisi yok). En fazla 6 görsel."
         >
           <Upload
             multiple
-            accept="image/jpeg,image/png,image/webp,image/gif,image/heic"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             listType="picture-card"
             fileList={fileList}
             disabled={gallery.length >= MAX_IMAGES}

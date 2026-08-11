@@ -16,10 +16,15 @@ import {
   updateProfile,
   type User,
 } from "firebase/auth";
-import { auth } from "@/firebase.config";
+import { auth, getUserProfile, saveUserProfile } from "@/firebase.config";
+
+/** Auth photoURL çok uzun data URL’leri reddedebilir */
+const AUTH_PHOTO_URL_MAX = 1800;
 
 type AuthContextValue = {
   user: User | null;
+  /** Auth + Firestore birleşik görsel */
+  photoURL: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -33,12 +38,25 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [photoURL, setPhotoURL] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
       setUser(nextUser);
-      setLoading(false);
+      if (!nextUser) {
+        setPhotoURL(null);
+        setLoading(false);
+        return;
+      }
+      try {
+        const profile = await getUserProfile(nextUser.uid);
+        setPhotoURL(profile?.photoURL || nextUser.photoURL || null);
+      } catch {
+        setPhotoURL(nextUser.photoURL || null);
+      } finally {
+        setLoading(false);
+      }
     });
     return unsubscribe;
   }, []);
@@ -59,25 +77,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!auth.currentUser) {
         throw new Error("Oturum açık değil");
       }
-      await updateProfile(auth.currentUser, values);
-      await auth.currentUser.reload();
-      setUser(auth.currentUser);
+      const uid = auth.currentUser.uid;
+      const nextDisplayName =
+        values.displayName !== undefined
+          ? values.displayName
+          : auth.currentUser.displayName;
+      const nextPhoto =
+        values.photoURL !== undefined
+          ? values.photoURL
+          : photoURL || auth.currentUser.photoURL;
+
+      await saveUserProfile(uid, {
+        displayName: nextDisplayName ?? null,
+        photoURL: nextPhoto ?? null,
+      });
+
+      const authPayload: {
+        displayName?: string | null;
+        photoURL?: string | null;
+      } = {};
+
+      if (values.displayName !== undefined) {
+        authPayload.displayName = values.displayName;
+      }
+
+      // Kısa http(s) URL’leri Auth’a yaz; data URL yalnızca Firestore’da kalır
+      if (
+        values.photoURL &&
+        values.photoURL.length <= AUTH_PHOTO_URL_MAX &&
+        !values.photoURL.startsWith("data:")
+      ) {
+        authPayload.photoURL = values.photoURL;
+      }
+
+      if (Object.keys(authPayload).length > 0) {
+        await updateProfile(auth.currentUser, authPayload);
+        await auth.currentUser.reload();
+        setUser(auth.currentUser);
+      }
+
+      if (values.photoURL !== undefined) {
+        setPhotoURL(values.photoURL);
+      }
     },
-    [],
+    [photoURL],
   );
 
   const value = useMemo(
-    () => ({ user, loading, login, logout, updateUserProfile }),
-    [
+    () => ({
       user,
-      user?.displayName,
-      user?.photoURL,
-      user?.email,
+      photoURL,
       loading,
       login,
       logout,
       updateUserProfile,
-    ],
+    }),
+    [user, user?.displayName, user?.email, photoURL, loading, login, logout, updateUserProfile],
   );
 
   return (

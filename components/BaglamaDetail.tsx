@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { App } from "antd";
 import MyImages from "@/components/MyImages";
 import YoutubeEmbed from "@/components/YoutubeEmbed";
 import BaglamaForm from "@/components/BaglamaForm";
 import AuthGuard from "@/components/AuthGuard";
 import { useAuth } from "@/context/AuthContext";
+import { deleteBaglama } from "@/firebase.config";
 import { boyut, govdeAgaci, tip } from "@/lib/generalValues";
 import type { Baglama } from "@/lib/Interfaces";
 
@@ -38,7 +41,10 @@ type Props = {
 
 export default function BaglamaDetail({ baglama }: Props) {
   const { user, loading } = useAuth();
+  const { modal, message } = App.useApp();
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -80,6 +86,42 @@ export default function BaglamaDetail({ baglama }: Props) {
     },
   ];
 
+  const handleDelete = () => {
+    if (!user) {
+      message.error("Silmek için giriş yapmalısınız");
+      router.replace("/login");
+      return;
+    }
+
+    modal.confirm({
+      title: "Bağlamayı sil",
+      content: `"${baglama.title}" kalıcı olarak silinecek. Emin misiniz?`,
+      okText: "Sil",
+      okType: "danger",
+      cancelText: "İptal",
+      onOk: async () => {
+        if (!user) {
+          message.error("Silmek için giriş yapmalısınız");
+          router.replace("/login");
+          return;
+        }
+        setDeleting(true);
+        try {
+          await deleteBaglama(baglama.id);
+          message.success("Bağlama silindi");
+          router.push("/baglamalar");
+          router.refresh();
+        } catch (error: unknown) {
+          const err = error as { message?: string };
+          message.error(err.message || "Silme başarısız");
+          throw error;
+        } finally {
+          setDeleting(false);
+        }
+      },
+    });
+  };
+
   if (editing) {
     return (
       <AuthGuard>
@@ -108,13 +150,24 @@ export default function BaglamaDetail({ baglama }: Props) {
           <Link href="/baglamalar">← Bağlamalar</Link>
         </p>
         {!loading && user ? (
-          <button
-            type="button"
-            className="btn-accent detail-edit-btn"
-            onClick={() => setEditing(true)}
-          >
-            Düzenle
-          </button>
+          <div className="detail-actions">
+            <button
+              type="button"
+              className="detail-action-btn detail-action-btn--edit"
+              onClick={() => setEditing(true)}
+              disabled={deleting}
+            >
+              Düzenle
+            </button>
+            <button
+              type="button"
+              className="detail-action-btn detail-action-btn--delete"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Siliniyor…" : "Sil"}
+            </button>
+          </div>
         ) : null}
       </div>
 

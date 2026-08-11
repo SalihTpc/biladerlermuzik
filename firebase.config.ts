@@ -53,7 +53,7 @@ const addBaglama = async (baglama: {
   };
   const result = await setDoc(
     doc(db, "baglama", modifyString(baglama.title)),
-    data
+    data,
   );
   return result;
 };

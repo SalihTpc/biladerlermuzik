@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Biladerler Müzik
 
-## Getting Started
+Bağlama kataloğu için Next.js 14 mağaza sitesi. Firebase (Firestore, Auth, Storage) ve NextAuth ile çalışır; arayüzde Ant Design ve Tailwind kullanılır.
 
-First, run the development server:
+## Başlangıç
 
 ```bash
+npm install
+cp .env.example .env
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Windows (PowerShell):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```powershell
+npm install
+Copy-Item .env.example .env
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+[http://localhost:3000](http://localhost:3000) adresinde açılır.
 
-## Learn More
+`.env.example` içindeki Firebase değerleri mevcut proje içindir; `NEXTAUTH_SECRET` değerini üretimde mutlaka değiştirin. Yerel `.env` dosyası git’e **eklenmez**.
 
-To learn more about Next.js, take a look at the following resources:
+## Ortam değişkenleri
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Değişken | Açıklama |
+|----------|----------|
+| `NEXTAUTH_URL` | Uygulama URL’i (ör. `http://localhost:3000`) |
+| `NEXTAUTH_SECRET` | NextAuth oturum sırrı |
+| `GITHUB_ID` / `GITHUB_SECRET` | GitHub OAuth (opsiyonel) |
+| `NEXT_PUBLIC_API_KEY` | Firebase API key |
+| `NEXT_PUBLIC_AUTH_DOMAIN` | Firebase auth domain |
+| `NEXT_PUBLIC_PROJECT_ID` | Firebase project id |
+| `NEXT_PUBLIC_STORAGE_BUCKET` | Firebase storage bucket |
+| `NEXT_PUBLIC_MESSAGING_SENDER_ID` | Firebase messaging sender id |
+| `NEXT_PUBLIC_APP_ID` | Firebase app id |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Şablon: [`.env.example`](./.env.example)
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Komut | Açıklama |
+|-------|----------|
+| `npm run dev` | Geliştirme |
+| `npm run build` | Üretim derlemesi |
+| `npm start` | Üretim sunucusu |
+| `npm run lint` | Lint |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Döküman
+
+Proje yapısı, rotalar, bileşenler, veri katmanı ve auth akışı için:
+
+**[DOKUMANTASYON.md](./DOKUMANTASYON.md)**

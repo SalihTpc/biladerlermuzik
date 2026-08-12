@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./Navbar.css";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -15,21 +15,27 @@ const Navbar = () => {
   const { user, loading, logout } = useAuth();
   const pathname = usePathname();
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   return (
-    <nav className="site-nav z-10">
+    <nav className="site-nav">
       <div className="page-frame site-nav__inner">
-        <div className="title flex items-center justify-center no-underline h-fit gap-3">
-          <Link href="/" className="flex items-center no-underline text-inherit">
+        <div className="title">
+          <Link href="/" className="nav-logo-link">
             <Image
               src={tenant.theme.logoPath}
-              width={56}
-              height={56}
+              width={44}
+              height={44}
               alt={tenant.brand.name}
               className="nav-logo"
               title="Anasayfa"
+              priority
+              loading="eager"
             />
           </Link>
-          <div className="nav-brand-auth flex gap-3 items-center">
+          <div className="nav-brand-auth">
             {loading ? null : user ? (
               <>
                 <Link href="/profile" className="nav-link-text">
@@ -41,7 +47,7 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link href="/" className="nav-brand-name m-0 no-underline text-inherit">
+                <Link href="/" className="nav-brand-name no-underline text-inherit">
                   {tenant.brand.name}
                 </Link>
                 <Link href="/login" className="nav-link-text">
@@ -54,7 +60,7 @@ const Navbar = () => {
         <button
           type="button"
           className="menu"
-          aria-label="Menüyü aç"
+          aria-label={menuOpen ? "Menüyü kapat" : "Menüyü aç"}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen(!menuOpen)}
         >

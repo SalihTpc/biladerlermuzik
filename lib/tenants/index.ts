@@ -19,7 +19,9 @@ export function getTenant(): TenantConfig {
   return activeTenant;
 }
 
-/** Custom favicon if set; otherwise tenant logo. */
+/** Prefer icons.ico / icons.png32, then faviconPath, otherwise tenant logo. */
 export function getTenantFaviconPath(tenant: TenantConfig = activeTenant): string {
-  return tenant.theme.faviconPath?.trim() || tenant.theme.logoPath;
+  const icons = tenant.theme.icons;
+  const fromIcons = icons?.ico?.trim() || icons?.png32?.trim();
+  return fromIcons || tenant.theme.faviconPath?.trim() || tenant.theme.logoPath;
 }

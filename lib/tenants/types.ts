@@ -17,6 +17,16 @@ export type TenantFonts = {
   body: string;
 };
 
+/** Multi-size favicon set (e.g. RealFaviconGenerator output under public/tenants/<id>/) */
+export type TenantIcons = {
+  ico?: string;
+  png16?: string;
+  png32?: string;
+  apple?: string;
+  android192?: string;
+  android512?: string;
+};
+
 export type TenantTheme = {
   colors: TenantColors;
   fonts: TenantFonts;
@@ -24,6 +34,8 @@ export type TenantTheme = {
   logoPath: string;
   /** Optional; defaults to logoPath. Prefer a square 32–512px PNG under public/tenants/<id>/ */
   faviconPath?: string;
+  /** Optional multi-size set; preferred over faviconPath when present */
+  icons?: TenantIcons;
 };
 
 export type TenantBrand = {
@@ -39,12 +51,20 @@ export type TenantContact = {
   address: string;
   whatsapp?: string;
   youtube?: string;
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  /** Google Maps / Apple Maps share link — opens when address or map is clicked */
   mapsUrl?: string;
+  /** Google Maps embed iframe `src` for the contact page map */
+  mapsEmbedUrl?: string;
 };
 
 export type TenantMeta = {
   title: string;
   description: string;
+  /** Optional SEO keywords for the tenant */
+  keywords?: string[];
 };
 
 export type TenantConfig = {

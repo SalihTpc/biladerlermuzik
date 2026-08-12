@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import LoginForm from "@/components/LoginForm";
 import PageShell from "@/components/PageShell";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "Giriş",
+  description: "Hesabınıza giriş yapın.",
+  path: "/login",
+  noIndex: true,
+});
 
 const page = () => {
   return (

@@ -1,9 +1,20 @@
+import type { Metadata } from "next";
 import BaglamaCard from "@/components/BaglamaCard";
 import PageShell from "@/components/PageShell";
 import { getBaglamalar } from "@/firebase.config";
 import { Baglama } from "@/lib/Interfaces";
+import { getTenant } from "@/lib/tenants";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+const tenant = getTenant();
+
+export const metadata: Metadata = pageMetadata({
+  title: "Bağlamalar",
+  description: `${tenant.brand.name} bağlamaları — stoktaki bağlamaları inceleyin, detay ve ses için ürüne tıklayın.`,
+  path: "/baglamalar",
+});
 
 async function getData(): Promise<{ items: Baglama[]; error: string | null }> {
   try {

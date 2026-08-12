@@ -33,6 +33,13 @@ export const ornekTenant: TenantConfig = {
     email: "info@ornek.example",
     phone: "+90 XXX XXX XX XX",
     address: "Adres buraya",
+    // whatsapp: "https://wa.me/90XXXXXXXXXX",
+    // instagram: "https://www.instagram.com/...",
+    // facebook: "https://www.facebook.com/...",
+    // tiktok: "https://www.tiktok.com/@...",
+    // youtube: "https://www.youtube.com/@...",
+    // mapsUrl: "https://maps.app.goo.gl/...",
+    // mapsEmbedUrl: "https://www.google.com/maps/embed?pb=...",
   },
   meta: {
     title: "Örnek Müzik",

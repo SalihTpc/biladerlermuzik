@@ -1,11 +1,24 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getTenant } from "@/lib/tenants";
 import PageShell from "@/components/PageShell";
+import { pageMetadata } from "@/lib/seo";
+
+const tenant = getTenant();
+
+export const metadata: Metadata = {
+  ...pageMetadata({
+    title: tenant.meta.title,
+    description: tenant.meta.description,
+    path: "/",
+  }),
+  title: {
+    absolute: tenant.meta.title,
+  },
+};
 
 export default function Home() {
-  const tenant = getTenant();
-
   return (
     <div className="home-hero">
       <div className="home-hero__media" aria-hidden>

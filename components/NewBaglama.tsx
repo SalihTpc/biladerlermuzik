@@ -16,7 +16,7 @@ const NewButton = () => {
     <FloatButton
       onClick={() => router.push("/baglamalar/ekle", { scroll: false })}
       type="primary"
-      style={{ top: 94, right: 14 }}
+      style={{ bottom: 64, right: 14 }}
       icon={<i className="fa-solid fa-plus" />}
     />
   );

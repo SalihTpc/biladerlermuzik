@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import AuthGuard from "@/components/AuthGuard";
 import BaglamaForm from "@/components/BaglamaForm";
 import PageShell from "@/components/PageShell";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "Bağlama ekle",
+  description: "Yeni bağlama kaydı oluşturun.",
+  path: "/baglamalar/ekle",
+  noIndex: true,
+});
 
 const page = () => {
   return (

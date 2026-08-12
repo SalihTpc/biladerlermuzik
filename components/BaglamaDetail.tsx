@@ -12,6 +12,10 @@ import { useAuth } from "@/context/AuthContext";
 import { deleteBaglama } from "@/firebase.config";
 import { boyut, govdeAgaci, tip } from "@/lib/generalValues";
 import type { Baglama } from "@/lib/Interfaces";
+import { getTenant } from "@/lib/tenants";
+import { buildWhatsAppInquiryUrl } from "@/lib/whatsapp";
+
+const tenant = getTenant();
 
 function formatPrice(fiyat: number) {
   if (typeof fiyat !== "number" || Number.isNaN(fiyat)) return null;
@@ -48,6 +52,7 @@ export default function BaglamaDetail({ baglama }: Props) {
   const showEditor = editing && Boolean(user);
 
   const price = formatPrice(baglama.fiyat);
+  const whatsapp = tenant.contact.whatsapp;
   const specs = [
     {
       label: "Tip / yapım",
@@ -175,7 +180,29 @@ export default function BaglamaDetail({ baglama }: Props) {
         <div className="detail-info">
           <header className="page-header detail-info__header">
             <h1 className="font-display">{baglama.title}</h1>
-            {price ? <p className="detail-price">{price}</p> : null}
+            {price || whatsapp ? (
+              <div className="detail-price-row">
+                {price ? <p className="detail-price">{price}</p> : <span />}
+                {whatsapp ? (
+                  <a
+                    className="btn-accent detail-whatsapp"
+                    href={whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const href = buildWhatsAppInquiryUrl(whatsapp, {
+                        title: baglama.title,
+                        url: window.location.href,
+                      });
+                      window.open(href, "_blank", "noopener,noreferrer");
+                    }}
+                  >
+                    WhatsApp ile sor
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
           </header>
 
           <section className="detail-section">

@@ -4,11 +4,14 @@ import "./globals.css";
 import StyledComponentsRegistry from "@/lib/AntdRegistry";
 import "../assets/fontawesome-6.1.2/css/all.min.css";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import JsonLd from "@/components/JsonLd";
 import { AuthProvider } from "@/context/AuthContext";
 import NewButton from "@/components/NewBaglama";
-import { getTenant, getTenantFaviconPath } from "@/lib/tenants";
+import { getTenant } from "@/lib/tenants";
 import { themeToCssVars } from "@/lib/theme/cssVars";
 import ThemeProvider from "@/lib/theme/ThemeProvider";
+import { buildOrganizationJsonLd, buildRootMetadata } from "@/lib/seo";
 import type { CSSProperties } from "react";
 
 const biladerlerDisplay = Fraunces({
@@ -38,7 +41,6 @@ const bestekarBody = Nunito({
 });
 
 const tenant = getTenant();
-const favicon = getTenantFaviconPath(tenant);
 
 const fontsByTenant = {
   biladerler: { display: biladerlerDisplay, body: biladerlerBody },
@@ -49,15 +51,7 @@ const fonts =
   fontsByTenant[tenant.id as keyof typeof fontsByTenant] ??
   fontsByTenant.biladerler;
 
-export const metadata: Metadata = {
-  title: tenant.meta.title,
-  description: tenant.meta.description,
-  icons: {
-    icon: [{ url: favicon }],
-    shortcut: favicon,
-    apple: favicon,
-  },
-};
+export const metadata: Metadata = buildRootMetadata(tenant);
 
 export default function RootLayout({
   children,
@@ -73,6 +67,7 @@ export default function RootLayout({
       style={cssVars}
     >
       <body className={fonts.body.className}>
+        <JsonLd data={buildOrganizationJsonLd(tenant)} />
         <StyledComponentsRegistry>
           <ThemeProvider theme={tenant.theme}>
             <AuthProvider>
@@ -82,6 +77,7 @@ export default function RootLayout({
                   <NewButton />
                   {children}
                 </main>
+                <Footer />
               </div>
             </AuthProvider>
           </ThemeProvider>

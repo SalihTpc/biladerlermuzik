@@ -6,10 +6,11 @@ Build-time multi-tenancy: bir build = bir tenant. Branding `lib/tenants/`, veri 
 
 Örnek id: `acme`
 
-1. **Config** — [`lib/tenants/ornek.ts`](../lib/tenants/ornek.ts) dosyasını `lib/tenants/acme.ts` olarak kopyala; `id`, `brand`, `theme`, `contact`, `meta` doldur; `logoPath: "/tenants/acme/logo.png"`.
-2. **Logo / favicon** — `public/tenants/acme/logo.png` ekle. Favicon için:
+1. **Config** — [`lib/tenants/ornek.ts`](../lib/tenants/ornek.ts) dosyasını `lib/tenants/acme.ts` olarak kopyala; `id`, `brand`, `theme`, `contact`, `meta` doldur; `logoPath: "/tenants/acme/logo.png"`. `contact` içinde opsiyonel sosyal / iletişim alanları: `whatsapp`, `instagram`, `facebook`, `tiktok`, `youtube`, `mapsUrl`, `mapsEmbedUrl`.
+2. **Logo / favicon** — `public/tenants/acme/logo.png` (veya `.jpg`) ekle. Favicon için:
    - Varsayılan: logo kullanılır (`metadata.icons`).
-   - Özel favicon: `public/tenants/acme/favicon.png` (kare, 32–512px önerilir) koy ve config’te `faviconPath: "/tenants/acme/favicon.png"` yaz.
+   - Tek dosya: `public/tenants/acme/favicon.png` koy ve config’te `faviconPath: "/tenants/acme/favicon.png"` yaz.
+   - Çoklu set (önerilen): RealFaviconGenerator çıktısını `public/tenants/acme/` altına koy (`favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png`, `android-chrome-192x192.png`, `android-chrome-512x512.png`) ve config’te `theme.icons` ile path’leri ver. Logo JPG olsa bile favicon seti ayrı kalır.
 3. **Registry** — [`lib/tenants/registry.json`](../lib/tenants/registry.json) içine kayıt ekle:
 
 ```json
@@ -64,6 +65,20 @@ npm run build:tenant -- ornek
 
 Hosting (Vercel, VPS, vb.) ayrı karar; şimdilik hedef temiz lokal `.next` artifact.
 
+## SEO
+
+Her tenant build’inde:
+
+| Parça | Not |
+|-------|-----|
+| `NEXT_PUBLIC_SITE_URL` | Canonical / Open Graph / sitemap kökü (örn. `https://www.bestekarmuzik.com`) |
+| `app/robots.ts` | `/login`, `/profile`, `/baglamalar/ekle` noindex |
+| `app/sitemap.ts` | Statik sayfalar + bağlama detayları |
+| Sayfa `metadata` | Title template, description, Open Graph |
+| JSON-LD | `MusicStore` (site geneli) + `Product` (bağlama detay) |
+
+Prod env’e `NEXT_PUBLIC_SITE_URL` eklemeyi unutma.
+
 ## Dosya haritası
 
 | Yol | Rol |
@@ -72,6 +87,6 @@ Hosting (Vercel, VPS, vb.) ayrı karar; şimdilik hedef temiz lokal `.next` arti
 | `lib/tenants/<id>.ts` | Branding / theme / contact |
 | `lib/tenants/active.ts` | Script tarafından üretilir — elle düzenleme |
 | `lib/tenants/index.ts` | `getTenant()` / `getTenantId()` |
-| `public/tenants/<id>/` | Statik asset’ler (`logo.png`, isteğe bağlı `favicon.png`) |
+| `public/tenants/<id>/` | Statik asset’ler (`logo.png`/`.jpg`, isteğe bağlı `faviconPath` veya `icons` seti) |
 | `.env.tenants/<id>.env` | Secret env (gitignore) |
 | `scripts/tenant.mjs` | list / use / validate / dev / build |

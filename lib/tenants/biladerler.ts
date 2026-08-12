@@ -37,6 +37,14 @@ export const biladerlerTenant: TenantConfig = {
   },
   meta: {
     title: "Biladerler Müzik",
-    description: "Biladerler Müzik Evi — bağlama ve müzik ekipmanları",
+    description:
+      "Biladerler Müzik Evi — Ankara Keçiören’de bağlama ve müzik ekipmanları. Mağazadan satış ve YouTube tanıtım videoları.",
+    keywords: [
+      "Biladerler Müzik",
+      "bağlama",
+      "Keçiören",
+      "Ankara bağlama",
+      "müzik ekipmanları",
+    ],
   },
 };

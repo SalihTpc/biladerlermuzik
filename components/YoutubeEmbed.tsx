@@ -13,7 +13,6 @@ export default function YoutubeEmbed({ url, title = "Bağlama videosu" }: Props)
 
   return (
     <section className="detail-video">
-      <h2 className="detail-section-title font-display">Video</h2>
       <div className="detail-video__frame">
         <iframe
           src={embedUrl}

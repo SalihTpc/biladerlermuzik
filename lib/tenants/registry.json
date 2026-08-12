@@ -6,5 +6,9 @@
   "ornek": {
     "importPath": "./ornek",
     "exportName": "ornekTenant"
+  },
+  "bestekar": {
+    "importPath": "./bestekar",
+    "exportName": "bestekarTenant"
   }
 }

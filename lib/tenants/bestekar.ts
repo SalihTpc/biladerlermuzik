@@ -11,23 +11,24 @@ export const bestekarTenant: TenantConfig = {
   },
   theme: {
     colors: {
-      // Logo: koyu zemin, turuncu gitarlar, krem orta gitar, teal dalgalar, kırmızı çizgiler
-      bg: "#1a1a1a",
-      surface: "#f3ebe0",
-      text: "#1a1a1a",
-      textMuted: "#5c5650",
-      textOnAccent: "#1a1a1a",
-      accent: "#e89b1a",
-      nav: "#121212",
-      navHover: "#2a2a2a",
-      border: "#d8cfc2",
+      // Logo: charcoal zemin, turuncu gitarlar, teal dalgalar, kırmızı çizgiler, beyaz yazı
+      bg: "#1e1e1e",
+      surface: "#f4faf9",
+      text: "#1e1e1e",
+      textMuted: "#4d5c5a",
+      textOnAccent: "#ffffff",
+      accent: "#0f9e94",
+      nav: "#141414",
+      navHover: "#2c2c2c",
+      border: "#c5d9d6",
     },
     fonts: {
-      display: "var(--font-display), Georgia, serif",
+      display: "var(--font-display), 'Segoe UI', system-ui, sans-serif",
       body: "var(--font-body), system-ui, sans-serif",
     },
-    radius: "0.5rem",
+    radius: "0.75rem",
     logoPath: "/tenants/bestekar/logo.png",
+    // faviconPath: "/tenants/bestekar/favicon.png", // opsiyonel; yoksa logo kullanılır
   },
   contact: {
     email: "info@bestekarmuzik.com",

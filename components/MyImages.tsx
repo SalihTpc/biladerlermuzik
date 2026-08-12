@@ -12,7 +12,6 @@ const MyImages = ({ images }: { images: string[] }) => {
           <Image
             src={images[0]}
             alt=""
-            style={{ width: "100%", height: "auto" }}
             preview={{ src: images[0] }}
           />
         </div>

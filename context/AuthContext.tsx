@@ -132,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       updateUserProfile,
     }),
-    [user, user?.displayName, user?.email, photoURL, loading, login, logout, updateUserProfile],
+    [user, photoURL, loading, login, logout, updateUserProfile],
   );
 
   return (

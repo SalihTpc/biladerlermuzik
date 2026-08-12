@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { App } from "antd";
@@ -45,12 +45,7 @@ export default function BaglamaDetail({ baglama }: Props) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    if (!loading && !user) {
-      setEditing(false);
-    }
-  }, [loading, user]);
+  const showEditor = editing && Boolean(user);
 
   const price = formatPrice(baglama.fiyat);
   const specs = [
@@ -122,7 +117,7 @@ export default function BaglamaDetail({ baglama }: Props) {
     });
   };
 
-  if (editing) {
+  if (showEditor) {
     return (
       <AuthGuard>
         <p className="text-muted detail-back">
@@ -134,6 +129,7 @@ export default function BaglamaDetail({ baglama }: Props) {
         </header>
         <div className="auth-panel baglama-form-panel">
           <BaglamaForm
+            key={baglama.id}
             initial={baglama}
             onCancel={() => setEditing(false)}
             onUpdated={() => setEditing(false)}

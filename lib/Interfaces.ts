@@ -9,5 +9,5 @@ export interface Baglama {
   youtubeLink: string;
   images: string[];
   fiyat: number;
-  created_at?: any;
+  created_at?: unknown;
 }

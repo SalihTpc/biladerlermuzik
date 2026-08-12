@@ -5,33 +5,53 @@ import { Baglama } from "@/lib/Interfaces";
 
 export const dynamic = "force-dynamic";
 
-async function getData() {
-  const res = getBaglamalar();
-  if (!res) {
-    throw new Error("Failed to fetch data");
+async function getData(): Promise<{ items: Baglama[]; error: string | null }> {
+  try {
+    const items = await getBaglamalar();
+    return { items, error: null };
+  } catch (error: unknown) {
+    const err = error as { code?: string; message?: string };
+    if (err.code === "permission-denied") {
+      return {
+        items: [],
+        error:
+          "Firestore izin hatası: baglama koleksiyonu okunamıyor. Firebase Console → Firestore → Rules içinde public read açılmalı.",
+      };
+    }
+    return {
+      items: [],
+      error: err.message || "Bağlamalar yüklenemedi",
+    };
   }
-  return res;
 }
 
 const page = async () => {
-  const data = await getData();
+  const { items, error } = await getData();
   return (
     <PageShell>
       <header className="page-header">
         <h1 className="font-display">Bağlamalar</h1>
         <p>Mağazadaki bağlamaları inceleyin; detay ve ses için ürüne tıklayın.</p>
       </header>
-      <div className="baglama-grid">
-        {data.map((dat: Baglama) => (
-          <BaglamaCard
-            key={dat.id}
-            description={dat.description}
-            title={dat.title}
-            image={dat.images[0]}
-            fiyat={dat.fiyat}
-          />
-        ))}
-      </div>
+      {error ? (
+        <p className="text-muted" role="alert">
+          {error}
+        </p>
+      ) : items.length === 0 ? (
+        <p className="text-muted">Henüz listelenecek bağlama yok.</p>
+      ) : (
+        <div className="baglama-grid">
+          {items.map((dat: Baglama) => (
+            <BaglamaCard
+              key={dat.id}
+              description={dat.description}
+              title={dat.title}
+              image={dat.images[0]}
+              fiyat={dat.fiyat}
+            />
+          ))}
+        </div>
+      )}
     </PageShell>
   );
 };

@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "tenant:list": "node scripts/tenant.mjs list",
     "tenant:use": "node scripts/tenant.mjs use",
     "tenant:validate": "node scripts/tenant.mjs validate",
@@ -29,7 +29,7 @@
     "@types/react-dom": "^19.2.4",
     "autoprefixer": "^10.5.4",
     "eslint": "^9.39.0",
-    "eslint-config-next": "^15.5.23",
+    "eslint-config-next": "^16.3.0",
     "postcss": "^8.5.26",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3"

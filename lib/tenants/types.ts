@@ -22,6 +22,8 @@ export type TenantTheme = {
   fonts: TenantFonts;
   radius: string;
   logoPath: string;
+  /** Optional; defaults to logoPath. Prefer a square 32–512px PNG under public/tenants/<id>/ */
+  faviconPath?: string;
 };
 
 export type TenantBrand = {

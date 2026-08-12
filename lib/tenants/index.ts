@@ -18,3 +18,8 @@ export function getTenant(): TenantConfig {
   }
   return activeTenant;
 }
+
+/** Custom favicon if set; otherwise tenant logo. */
+export function getTenantFaviconPath(tenant: TenantConfig = activeTenant): string {
+  return tenant.theme.faviconPath?.trim() || tenant.theme.logoPath;
+}

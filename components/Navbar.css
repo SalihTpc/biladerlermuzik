@@ -1,13 +1,17 @@
 .site-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   background-color: var(--color-nav);
   color: var(--color-surface);
   position: sticky;
   top: 0;
-  padding: 0;
   z-index: 20;
+}
+
+.site-nav__inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  min-height: 4.25rem;
 }
 
 .site-nav .title {
@@ -54,6 +58,8 @@
 .site-nav ul {
   display: flex;
   align-items: center;
+  margin: 0;
+  padding: 0;
 }
 
 .site-nav ul li {
@@ -65,7 +71,7 @@
   text-decoration: none;
   color: var(--color-surface);
   padding: 0.5rem 0.75rem;
-  margin: 0 0.25rem;
+  margin: 0 0.15rem;
   border-radius: var(--radius);
   transition: background-color 0.2s ease;
 }
@@ -77,8 +83,9 @@
 .site-nav .menu {
   display: none;
   position: absolute;
-  top: 1.1rem;
-  right: 0.75rem;
+  top: 50%;
+  right: var(--page-gutter);
+  transform: translateY(-50%);
   flex-direction: column;
   justify-content: space-between;
   width: 2.25rem;
@@ -87,6 +94,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
+  z-index: 1;
 }
 
 .site-nav .menu span {
@@ -101,14 +109,20 @@
 }
 
 @media (max-width: 640px) {
-  .site-nav .menu {
-    display: flex;
+  .site-nav__inner {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
   }
 
-  .site-nav {
-    flex-direction: column;
-    align-items: flex-start;
-    position: relative;
+  .site-nav .title {
+    padding-right: 2.75rem;
+  }
+
+  .site-nav .menu {
+    display: flex;
   }
 
   .site-nav .nav-brand-auth {
@@ -132,6 +146,6 @@
   }
 
   .site-nav ul li a {
-    margin: 0.2rem 0.5rem;
+    margin: 0.2rem 0;
   }
 }

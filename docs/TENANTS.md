@@ -7,7 +7,9 @@ Build-time multi-tenancy: bir build = bir tenant. Branding `lib/tenants/`, veri 
 Örnek id: `acme`
 
 1. **Config** — [`lib/tenants/ornek.ts`](../lib/tenants/ornek.ts) dosyasını `lib/tenants/acme.ts` olarak kopyala; `id`, `brand`, `theme`, `contact`, `meta` doldur; `logoPath: "/tenants/acme/logo.png"`.
-2. **Logo** — `public/tenants/acme/logo.png` ekle.
+2. **Logo / favicon** — `public/tenants/acme/logo.png` ekle. Favicon için:
+   - Varsayılan: logo kullanılır (`metadata.icons`).
+   - Özel favicon: `public/tenants/acme/favicon.png` (kare, 32–512px önerilir) koy ve config’te `faviconPath: "/tenants/acme/favicon.png"` yaz.
 3. **Registry** — [`lib/tenants/registry.json`](../lib/tenants/registry.json) içine kayıt ekle:
 
 ```json
@@ -70,6 +72,6 @@ Hosting (Vercel, VPS, vb.) ayrı karar; şimdilik hedef temiz lokal `.next` arti
 | `lib/tenants/<id>.ts` | Branding / theme / contact |
 | `lib/tenants/active.ts` | Script tarafından üretilir — elle düzenleme |
 | `lib/tenants/index.ts` | `getTenant()` / `getTenantId()` |
-| `public/tenants/<id>/` | Statik asset’ler (logo) |
+| `public/tenants/<id>/` | Statik asset’ler (`logo.png`, isteğe bağlı `favicon.png`) |
 | `.env.tenants/<id>.env` | Secret env (gitignore) |
 | `scripts/tenant.mjs` | list / use / validate / dev / build |

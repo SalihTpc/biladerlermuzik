@@ -21,19 +21,17 @@ const ProfileForm = ({ onSaved, onPreviewChange }: Props) => {
   const [form] = Form.useForm<FieldType>();
   const { message, notification } = App.useApp();
   const { user, photoURL, updateUserProfile } = useAuth();
-  const [preview, setPreview] = useState<string | null>(null);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [hasLocalPick, setHasLocalPick] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
+  const preview = hasLocalPick ? localPreview : photoURL;
 
   useEffect(() => {
-    if (!hasLocalPick) {
-      setPreview(photoURL);
-      onPreviewChange?.(photoURL);
-    }
-  }, [photoURL, hasLocalPick, onPreviewChange]);
+    onPreviewChange?.(preview);
+  }, [preview, onPreviewChange]);
 
   useEffect(() => {
     form.setFieldsValue({ displayName: user?.displayName || "" });
@@ -41,7 +39,7 @@ const ProfileForm = ({ onSaved, onPreviewChange }: Props) => {
 
   const setPreviewSafe = (url: string | null, local: boolean) => {
     setHasLocalPick(local);
-    setPreview(url);
+    setLocalPreview(url);
     onPreviewChange?.(url);
   };
 

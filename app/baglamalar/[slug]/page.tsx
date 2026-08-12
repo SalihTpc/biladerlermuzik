@@ -1,16 +1,9 @@
 import PageShell from "@/components/PageShell";
 import BaglamaDetail from "@/components/BaglamaDetail";
-import { getBaglama, getBaglamalar } from "@/firebase.config";
+import { getBaglama } from "@/firebase.config";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
-
-export async function generateStaticParams() {
-  const baglamalar = await getBaglamalar();
-  return baglamalar.map((baglama) => ({
-    slug: baglama.id,
-  }));
-}
 
 const page = async ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = await params;

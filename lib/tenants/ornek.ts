@@ -27,6 +27,7 @@ export const ornekTenant: TenantConfig = {
     },
     radius: "0.5rem",
     logoPath: "/tenants/ornek/logo.png",
+    // faviconPath: "/tenants/ornek/favicon.png", // opsiyonel; yoksa logo kullanılır
   },
   contact: {
     email: "info@ornek.example",

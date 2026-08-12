@@ -36,24 +36,49 @@ a {
   color: var(--color-surface);
 }
 
+/* Shared content width — keep nav + pages aligned */
+:root {
+  --page-max: 72rem;
+  --page-gutter: 1rem;
+  --page-main-pad-y-top: 1.25rem;
+  --page-main-pad-y-bottom: 3rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --page-gutter: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-gutter: 2rem;
+  }
+}
+
+.page-frame {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+  box-sizing: border-box;
+}
+
 .site-main {
   background-color: var(--color-surface);
   color: var(--color-text);
   min-height: calc(100vh - 5rem);
-  padding: 1.25rem 1rem 3rem;
-}
-
-@media (min-width: 640px) {
-  .site-main {
-    padding-left: 4rem;
-    padding-right: 4rem;
-  }
+  padding: var(--page-main-pad-y-top) 0 var(--page-main-pad-y-bottom);
 }
 
 .page-shell {
-  max-width: 72rem;
+  width: 100%;
+  max-width: var(--page-max);
   margin-inline: auto;
+  padding-inline: var(--page-gutter);
+  box-sizing: border-box;
 }
+
 
 .btn-accent {
   display: inline-flex;
@@ -110,19 +135,17 @@ a {
 .home-hero {
   position: relative;
   min-height: min(88vh, 44rem);
-  margin: -1.25rem -1rem -3rem;
+  margin: calc(var(--page-main-pad-y-top) * -1) 0
+    calc(var(--page-main-pad-y-bottom) * -1);
   display: flex;
   align-items: flex-end;
   overflow: hidden;
 }
 
-@media (min-width: 640px) {
-  .home-hero {
-    margin-left: -4rem;
-    margin-right: -4rem;
-    margin-top: -1.25rem;
-    margin-bottom: -3rem;
-  }
+.home-hero .page-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
 }
 
 .home-hero__media {
@@ -526,15 +549,31 @@ a {
 
 .detail-gallery__main {
   width: 100%;
+  max-width: 100%;
+  max-height: min(70vh, 520px);
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.detail-gallery__main .ant-image,
+.detail-gallery__main .ant-image {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: min(70vh, 520px);
+}
+
 .detail-gallery__main img {
-  width: 100% !important;
+  width: auto !important;
   height: auto !important;
+  max-width: 100% !important;
+  max-height: min(70vh, 520px) !important;
+  object-fit: contain;
   display: block;
 }
 

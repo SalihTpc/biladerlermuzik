@@ -27,6 +27,7 @@ export const biladerlerTenant: TenantConfig = {
     },
     radius: "0.5rem",
     logoPath: "/tenants/biladerler/logo.png",
+    // faviconPath: "/tenants/biladerler/favicon.png", // opsiyonel; yoksa logo kullanılır
   },
   contact: {
     email: "info@biladerlermuzik.com",

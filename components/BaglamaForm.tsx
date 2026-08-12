@@ -15,7 +15,7 @@ import {
   type UploadFile,
   type UploadProps,
 } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { boyut, govdeAgaci, tekneBoyu, tip } from "@/lib/generalValues";
 import { addBaglama, updateBaglama } from "@/firebase.config";
@@ -112,13 +112,7 @@ const BaglamaForm = ({ initial, onCancel, onUpdated }: Props) => {
   const [externalUrl, setExternalUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
-
-  useEffect(() => {
-    if (!initial) return;
-    form.setFieldsValue(baglamaToFormValues(initial));
-    setGallery(imagesToGallery(initial.images));
-    setFileList([]);
-  }, [initial, form]);
+  const formInitialValues = initial ? baglamaToFormValues(initial) : undefined;
 
   const addGalleryItem = (item: GalleryItem): boolean => {
     let added = false;
@@ -184,7 +178,6 @@ const BaglamaForm = ({ initial, onCancel, onUpdated }: Props) => {
     const url = externalUrl.trim();
     if (!url) return;
     try {
-      // eslint-disable-next-line no-new
       new URL(url);
     } catch {
       message.error("Geçerli bir görsel URL’si girin");
@@ -269,6 +262,7 @@ const BaglamaForm = ({ initial, onCancel, onUpdated }: Props) => {
       onFinish={onFinish}
       autoComplete="off"
       className="baglama-form"
+      initialValues={formInitialValues}
     >
         <Form.Item<FieldType>
           name="title"

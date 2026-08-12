@@ -1,29 +1,20 @@
-import { biladerlerTenant } from "./biladerler";
-import { ornekTenant } from "./ornek";
+import { activeTenant } from "./active";
+import { listTenantIds, TENANT_REGISTRY } from "./registry";
 import type { TenantConfig } from "./types";
 
-const tenants: Record<string, TenantConfig> = {
-  [biladerlerTenant.id]: biladerlerTenant,
-  [ornekTenant.id]: ornekTenant,
-};
-
 export type { TenantConfig } from "./types";
+export { listTenantIds, TENANT_REGISTRY };
 
 export function getTenantId(): string {
-  return process.env.NEXT_PUBLIC_TENANT_ID?.trim() || "biladerler";
+  return process.env.NEXT_PUBLIC_TENANT_ID?.trim() || activeTenant.id;
 }
 
 export function getTenant(): TenantConfig {
   const id = getTenantId();
-  const tenant = tenants[id];
-  if (!tenant) {
+  if (id !== activeTenant.id) {
     throw new Error(
-      `Unknown NEXT_PUBLIC_TENANT_ID="${id}". Registered: ${Object.keys(tenants).join(", ")}`,
+      `NEXT_PUBLIC_TENANT_ID="${id}" does not match generated active tenant "${activeTenant.id}". Run: npm run tenant:use -- ${id}`,
     );
   }
-  return tenant;
-}
-
-export function listTenantIds(): string[] {
-  return Object.keys(tenants);
+  return activeTenant;
 }

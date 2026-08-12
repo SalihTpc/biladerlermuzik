@@ -1,6 +1,6 @@
-# Biladerler Müzik — Yapı Dökümanı
+# Baglama Store — Yapı Dökümanı
 
-Bağlama kataloğu ve mağaza sitesi. Next.js App Router ile arayüz, Firebase ile veri/depolama ve oturum yönetimi.
+Multi-tenant bağlama kataloğu / mağaza iskeleti. Next.js App Router ile arayüz, Firebase ile veri/depolama ve oturum yönetimi. Tenant branding ve Firebase projesi build-time seçilir; ayrıntılar için [docs/TENANTS.md](./docs/TENANTS.md).
 
 ## 1. Genel bakış
 
@@ -20,6 +20,14 @@ Bağlama kataloğu ve mağaza sitesi. Next.js App Router ile arayüz, Firebase i
 | `npm run build` | Üretim derlemesi |
 | `npm start` | Üretim sunucusu |
 | `npm run lint` | ESLint |
+| `npm run tenant:list` | Kayıtlı tenant’lar |
+| `npm run tenant:use -- <id>` | Aktif tenant seç |
+| `npm run dev:tenant -- <id>` | Tenant ile geliştirme |
+| `npm run build:tenant -- <id>` | Tenant-izole build |
+
+### Multi-tenant
+
+Aktif tenant `NEXT_PUBLIC_TENANT_ID` + `lib/tenants/active.ts` (script üretir). Yeni tenant ekleme, env ve izole build: **[docs/TENANTS.md](./docs/TENANTS.md)**.
 
 ### Mimari
 
@@ -43,7 +51,7 @@ Hybrid routing yok: tüm UI `app/` altında. **Middleware yok** — rota korumas
 ## 2. Dizin yapısı
 
 ```
-biladerlermuzik/
+baglama-store/
 ├── app/                         # App Router sayfalar ve root layout
 │   ├── layout.tsx               # Navbar, AuthProvider, Ant Design registry
 │   ├── globals.css              # Tailwind + global stiller
@@ -57,9 +65,12 @@ biladerlermuzik/
 │   └── hakkimizda/page.tsx
 ├── components/                  # İstemci UI bileşenleri
 ├── context/                     # AuthContext
-├── lib/                         # Tipler, yardımcılar, Antd SSR
+├── lib/                         # Tipler, yardımcılar, tenants, theme
+│   └── tenants/                 # Tenant registry + branding config
+├── scripts/tenant.mjs           # Tenant use / izole build
+├── .env.tenants/                # Tenant env şablonları (secret’lar gitignore)
+├── public/tenants/              # Tenant logoları
 ├── assets/fontawesome-6.1.2/    # Vendored Font Awesome
-├── public/                      # Statik dosyalar
 ├── firebase.config.ts           # Firebase init + veri katmanı
 ├── next.config.js
 ├── tailwind.config.ts
@@ -74,6 +85,8 @@ biladerlermuzik/
 | `components/` | Yeniden kullanılan UI |
 | `context/` | `AuthProvider` / `useAuth` |
 | `lib/` | Tipler, form seçenekleri, slug, Ant Design StyleProvider |
+| `lib/tenants/` | Tenant config + `active.ts` (script üretir) |
+| `scripts/tenant.mjs` | Tenant seçimi ve izole build |
 | `firebase.config.ts` | Firebase init + Firestore/Auth/Storage yardımcıları |
 | `assets/fontawesome-6.1.2/` | Font Awesome CSS |
 
@@ -96,7 +109,7 @@ Path alias: `@/*` → proje kökü (`tsconfig.json`).
 ### Layout
 
 - Tek root layout: `app/layout.tsx`
-- Metadata: title “Bilader Müzik”, description “Biladerler Müzik Evi”
+- Metadata: aktif tenant `meta` alanından (`getTenant()`)
 - Sıra: `StyledComponentsRegistry` → `AuthProvider` → `Navbar` + `NewButton` + `{children}`
 - Nested layout yok
 - `middleware.ts` yok

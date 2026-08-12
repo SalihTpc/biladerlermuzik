@@ -1,6 +1,6 @@
 import type { TenantConfig } from "./types";
 
-/** İkinci tenant şablonu — yeni deploy için kopyala / özelleştir */
+/** İkinci tenant şablonu — yeni deploy için kopyala / özelleştir; registry.json’a da ekle (docs/TENANTS.md) */
 export const ornekTenant: TenantConfig = {
   id: "ornek",
   brand: {

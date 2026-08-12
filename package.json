@@ -1,12 +1,17 @@
 {
-  "name": "biladerlermuzik",
+  "name": "baglama-store",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "tenant:list": "node scripts/tenant.mjs list",
+    "tenant:use": "node scripts/tenant.mjs use",
+    "tenant:validate": "node scripts/tenant.mjs validate",
+    "dev:tenant": "node scripts/tenant.mjs dev",
+    "build:tenant": "node scripts/tenant.mjs build"
   },
   "dependencies": {
     "@ant-design/cssinjs": "^1.24.0",

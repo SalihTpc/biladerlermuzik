@@ -1,0 +1,10 @@
+{
+  "biladerler": {
+    "importPath": "./biladerler",
+    "exportName": "biladerlerTenant"
+  },
+  "ornek": {
+    "importPath": "./ornek",
+    "exportName": "ornekTenant"
+  }
+}

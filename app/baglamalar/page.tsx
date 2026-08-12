@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import BaglamaCard from "@/components/BaglamaCard";
+import BaglamaCatalog from "@/components/BaglamaCatalog";
 import PageShell from "@/components/PageShell";
 import { getBaglamalar } from "@/firebase.config";
 import { Baglama } from "@/lib/Interfaces";
@@ -51,17 +51,7 @@ const page = async () => {
       ) : items.length === 0 ? (
         <p className="text-muted">Henüz listelenecek bağlama yok.</p>
       ) : (
-        <div className="baglama-grid">
-          {items.map((dat: Baglama) => (
-            <BaglamaCard
-              key={dat.id}
-              description={dat.description}
-              title={dat.title}
-              image={dat.images[0]}
-              fiyat={dat.fiyat}
-            />
-          ))}
-        </div>
+        <BaglamaCatalog items={items} />
       )}
     </PageShell>
   );

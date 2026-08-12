@@ -18,6 +18,7 @@ import {
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { boyut, govdeAgaci, tekneBoyu, tip } from "@/lib/generalValues";
+import { resolveOptionId } from "@/lib/baglamaOptions";
 import { addBaglama, updateBaglama } from "@/firebase.config";
 import { modifyString } from "@/lib/genFunc";
 import { useAuth } from "@/context/AuthContext";
@@ -49,18 +50,6 @@ type GalleryItem = {
 
 /** Firestore boyut limiti nedeniyle makul üst sınır */
 const MAX_IMAGES = 6;
-
-function resolveOptionId(
-  raw: string | number | undefined | null,
-  list: { id: number; label: string }[],
-): number | undefined {
-  if (raw === undefined || raw === null || raw === "") return undefined;
-  const asNum = typeof raw === "number" ? raw : Number(raw);
-  if (!Number.isNaN(asNum) && String(asNum) === String(raw).trim()) {
-    if (list.some((item) => item.id === asNum)) return asNum;
-  }
-  return list.find((item) => item.label === String(raw))?.id;
-}
 
 function baglamaToFormValues(baglama: Baglama): Partial<FieldType> {
   return {

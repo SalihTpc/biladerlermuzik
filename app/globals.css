@@ -264,7 +264,7 @@ a {
     flex-direction: column;
     gap: 1rem;
     min-height: 0;
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .page-shell--fit-screen .contact-map {
@@ -505,6 +505,36 @@ a {
   color: var(--color-text-muted);
   max-width: 36rem;
   line-height: 1.55;
+}
+
+.baglama-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.baglama-toolbar__select {
+  min-width: 9.5rem;
+  flex: 1 1 9.5rem;
+  max-width: 14rem;
+}
+
+.baglama-toolbar__select--sort {
+  min-width: 11.5rem;
+}
+
+.baglama-toolbar__clear {
+  flex: 0 0 auto;
+  padding-inline: 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .baglama-toolbar__select {
+    max-width: none;
+    flex: 1 1 100%;
+  }
 }
 
 .baglama-grid {

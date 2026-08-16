@@ -46,14 +46,9 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              <>
-                <Link href="/" className="nav-brand-name no-underline text-inherit">
-                  {tenant.brand.name}
-                </Link>
-                <Link href="/login" className="nav-link-text">
-                  Giriş
-                </Link>
-              </>
+              <Link href="/" className="nav-brand-name no-underline text-inherit">
+                {tenant.brand.name}
+              </Link>
             )}
           </div>
         </div>
